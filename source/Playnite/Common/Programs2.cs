@@ -123,26 +123,20 @@ namespace Playnite.Common
 
         public static void CreateShortcut(string executablePath, string arguments, string iconPath, string shortcutPath)
         {
-            var shell = new IWshRuntimeLibrary.WshShell();
-            var link = (IWshRuntimeLibrary.IWshShortcut)shell.CreateShortcut(shortcutPath);
-            link.TargetPath = executablePath;
-            link.WorkingDirectory = Path.GetDirectoryName(executablePath);
-            link.Arguments = arguments;
-            link.IconLocation = string.IsNullOrEmpty(iconPath) ? executablePath + ",0" : iconPath;
-            link.Save();
+            ShellLinkHelper.CreateShortcut(executablePath, arguments, iconPath, shortcutPath);
         }
 
         public static Program GetLnkShortcutData(string lnkPath)
         {
-            var shell = new IWshRuntimeLibrary.WshShell();
-            var link = (IWshRuntimeLibrary.IWshShortcut)shell.CreateShortcut(lnkPath);
+            var link = ShellLinkHelper.ReadShortcut(lnkPath);
+
             return new Program()
             {
                 Path = link.TargetPath,
-                Icon = link.IconLocation == ",0" ? link.TargetPath : link.IconLocation,
+                Icon = string.IsNullOrEmpty(link.IconLocation) ? link.TargetPath : link.IconLocation,
                 Arguments = link.Arguments,
                 WorkDir = link.WorkingDirectory,
-                Name = link.FullName,
+                Name = lnkPath,
                 AppId = lnkPath.MD5()
             };
         }
@@ -167,7 +161,6 @@ namespace Playnite.Common
                     @"\windows\",
                 };
 
-                var shell = new IWshRuntimeLibrary.WshShell();
                 var apps = new List<Program>();
                 var shortucts = new SafeFileEnumerator(path, "*.lnk", SearchOption.AllDirectories);
 
@@ -191,8 +184,21 @@ namespace Playnite.Common
                         continue;
                     }
 
-                    var link = (IWshRuntimeLibrary.IWshShortcut)shell.CreateShortcut(shortcut.FullName);
-                    var target = link.TargetPath;
+                    string target;
+                    string iconLocation;
+                    string workingDir;
+                    try
+                    {
+                        var link = ShellLinkHelper.ReadShortcut(shortcut.FullName);
+                        target = link.TargetPath ?? string.Empty;
+                        iconLocation = link.IconLocation ?? string.Empty;
+                        workingDir = link.WorkingDirectory ?? string.Empty;
+                    }
+                    catch
+                    {
+                        // Failed to read shortcut, skip it
+                        continue;
+                    }
 
                     if (pathExceptions.FirstOrDefault(a => target.IndexOf(a, StringComparison.OrdinalIgnoreCase) >= 0) != null)
                     {
@@ -220,9 +226,9 @@ namespace Playnite.Common
                     var app = new Program()
                     {
                         Path = target,
-                        Icon = link.IconLocation,
+                        Icon = iconLocation,
                         Name = Path.GetFileNameWithoutExtension(shortcut.Name),
-                        WorkDir = link.WorkingDirectory,
+                        WorkDir = workingDir,
                         AppId = path.MD5()
                     };
 
