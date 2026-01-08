@@ -6,8 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
+using Avalonia.Controls;
+using Avalonia.Media;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 

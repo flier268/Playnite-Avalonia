@@ -1,7 +1,6 @@
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Windows.Markup;
+using Avalonia.Metadata;
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
@@ -19,6 +18,6 @@ using System.Windows.Markup;
 [assembly: InternalsVisibleTo("Playnite.FullscreenApp.Tests")]
 [assembly: InternalsVisibleTo("Playnite")]
 
-// XAML namespace definitions for WPF
-[assembly: XmlnsDefinition("http://schemas.microsoft.com/winfx/2006/xaml/presentation", "Playnite.SDK.Models")]
-[assembly: XmlnsDefinition("http://schemas.microsoft.com/winfx/2006/xaml/presentation", "Playnite.SDK.Controls")]
+// XAML namespace definitions for Avalonia
+[assembly: XmlnsDefinition("https://github.com/avaloniaui", "Playnite.SDK.Models")]
+[assembly: XmlnsDefinition("https://github.com/avaloniaui", "Playnite.SDK.Controls")]

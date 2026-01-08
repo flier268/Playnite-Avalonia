@@ -8,9 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
+using Avalonia.Controls;
+using Avalonia.Data.Converters;
 
 namespace Playnite.SDK.Plugins
 {

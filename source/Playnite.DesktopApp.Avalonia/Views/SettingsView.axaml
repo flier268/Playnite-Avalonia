@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:Playnite.DesktopApp.Avalonia.Views"
+             xmlns:vm="clr-namespace:Playnite.DesktopApp.Avalonia.ViewModels"
+             x:Class="Playnite.DesktopApp.Avalonia.Views.SettingsView">
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="{x:Type vm:SettingsGeneralViewModel}">
+      <views:SettingsGeneralView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsAppearanceViewModel}">
+      <views:SettingsAppearanceView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsLibrariesViewModel}">
+      <views:SettingsLibrariesView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsUpdatesViewModel}">
+      <views:SettingsUpdatesView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsAdvancedViewModel}">
+      <views:SettingsAdvancedView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsAboutViewModel}">
+      <views:SettingsAboutView />
+    </DataTemplate>
+  </UserControl.DataTemplates>
+
+  <Grid ColumnDefinitions="240,*" RowDefinitions="Auto,*" Background="{DynamicResource ShellContentBrush}">
+    <Border Grid.ColumnSpan="2" Background="{DynamicResource ShellHeaderBrush}" Padding="12">
+      <TextBlock Text="{Binding Title}" Foreground="{DynamicResource ShellTextBrush}" FontSize="20" />
+    </Border>
+
+    <Border Grid.Row="1" Background="{DynamicResource ShellNavBrush}" Padding="12">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Sections" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <ListBox ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}" BorderThickness="0" Background="Transparent" />
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource ShellContentBrush}" Padding="16">
+      <ContentControl Content="{Binding CurrentSection}" />
+    </Border>
+  </Grid>
+</UserControl>

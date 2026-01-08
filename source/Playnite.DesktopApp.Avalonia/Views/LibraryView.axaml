@@ -1,0 +1,201 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:Playnite.DesktopApp.Avalonia.Converters"
+             xmlns:vm="clr-namespace:Playnite.DesktopApp.Avalonia.ViewModels"
+             x:Class="Playnite.DesktopApp.Avalonia.Views.LibraryView">
+  <UserControl.Resources>
+    <conv:GameCoverImageConverter x:Key="GameCoverImageConverter" />
+  </UserControl.Resources>
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="{x:Type vm:LibraryGroupHeaderEntry}">
+      <Border Background="{DynamicResource ShellNavBrush}" BorderBrush="{DynamicResource ShellDividerBrush}" BorderThickness="1" Padding="8" Margin="0,0,0,6" CornerRadius="4">
+        <TextBlock Text="{Binding}" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+      </Border>
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:LibraryGameEntry}">
+      <Border x:Name="ItemCard"
+              Background="{DynamicResource ShellCardBrush}"
+              BorderBrush="{DynamicResource ShellItemBorderBrush}"
+              BorderThickness="1"
+              Padding="8"
+              Margin="0,0,0,6"
+              CornerRadius="4">
+        <Grid ColumnDefinitions="64,*" RowDefinitions="Auto,Auto">
+          <Border Background="{DynamicResource ShellNavBrush}" Width="56" Height="84" CornerRadius="4">
+            <Image Source="{Binding Game, Converter={StaticResource GameCoverImageConverter}}" Stretch="UniformToFill" />
+          </Border>
+          <StackPanel Grid.Column="1" Spacing="4">
+            <TextBlock Text="{Binding Game.Name}" Foreground="{DynamicResource ShellTextBrush}" FontSize="14" />
+            <TextBlock Text="{Binding Game.LastActivity, StringFormat=Last active: {0:yyyy-MM-dd}}"
+                       Foreground="{DynamicResource ShellMutedTextBrush}"
+                       FontSize="12" />
+            <TextBlock Text="{Binding Game.IsInstalled, StringFormat=Installed: {0}}"
+                       Foreground="{DynamicResource ShellMutedTextBrush}"
+                       FontSize="12" />
+          </StackPanel>
+        </Grid>
+        <Border.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Open details"
+                      Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding Game}" />
+            <MenuItem Header="Play"
+                      Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding Game}" />
+            <MenuItem Header="Install/Uninstall"
+                      Command="{Binding DataContext.InstallCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding Game}" />
+            <MenuItem Header="Rescan install size"
+                      Command="{Binding DataContext.RescanInstallSizeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding Game}" />
+            <MenuItem Header="Download metadata (missing)"
+                      Command="{Binding DataContext.DownloadMissingMetadataCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding Game}" />
+            <MenuItem Header="Download metadata (overwrite)"
+                      Command="{Binding DataContext.DownloadMetadataCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding Game}" />
+            <Separator />
+            <MenuItem Header="Favorite"
+                      ToggleType="CheckBox"
+                      IsChecked="{Binding Game.Favorite}"
+                      Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding Game}" />
+            <MenuItem Header="Hidden"
+                      ToggleType="CheckBox"
+                      IsChecked="{Binding Game.Hidden}"
+                      Command="{Binding DataContext.ToggleHiddenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding Game}" />
+          </ContextMenu>
+        </Border.ContextMenu>
+      </Border>
+    </DataTemplate>
+  </UserControl.DataTemplates>
+  <UserControl.Styles>
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBoxItem:pointerover Border#ItemCard">
+      <Setter Property="Background" Value="{DynamicResource ShellItemHoverBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ShellDividerBrush}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected Border#ItemCard">
+      <Setter Property="Background" Value="{DynamicResource ShellItemSelectedBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ShellAccentBrush}" />
+    </Style>
+  </UserControl.Styles>
+  <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="220,*" Background="{DynamicResource ShellContentBrush}">
+    <TextBlock Text="{Binding Header}" Foreground="{DynamicResource ShellTextBrush}" FontSize="22" Grid.ColumnSpan="2" />
+    <TextBlock Text="{Binding Description}" Foreground="{DynamicResource ShellMutedTextBrush}" TextWrapping="Wrap" Grid.Row="1" Grid.ColumnSpan="2" />
+
+    <Border Grid.Row="2" Grid.Column="0" Margin="0,12,8,0" Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Filters" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <TextBlock Text="Search" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        <TextBox Text="{Binding FilterText}" Watermark="Type to filter..." />
+        <CheckBox Content="Installed only" IsChecked="{Binding ShowInstalledOnly}" />
+        <CheckBox Content="Favorites only" IsChecked="{Binding ShowFavoritesOnly}" />
+        <CheckBox Content="Include hidden" IsChecked="{Binding ShowHidden}" />
+        <CheckBox Content="Has cover image" IsChecked="{Binding RequireCover}" />
+        <TextBlock Text="Platform" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        <ComboBox ItemsSource="{Binding PlatformOptions}" SelectedItem="{Binding SelectedPlatform}" />
+        <TextBlock Text="Genre" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        <ComboBox ItemsSource="{Binding GenreOptions}" SelectedItem="{Binding SelectedGenre}" />
+        <TextBlock Text="Sort by" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        <ComboBox ItemsSource="{Binding SortModes}" SelectedItem="{Binding SortMode}" />
+        <TextBlock Text="Group by" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        <ComboBox ItemsSource="{Binding GroupModes}" SelectedItem="{Binding GroupMode}" />
+        <TextBlock Text="View" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        <ComboBox ItemsSource="{Binding ViewModes}" SelectedItem="{Binding ViewMode}" />
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="2" Grid.Column="1" Margin="8,12,0,0" Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Games" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Rescan install sizes" Command="{Binding RescanAllInstallSizesCommand}" />
+          <ComboBox ItemsSource="{Binding MetadataProviders}" SelectedItem="{Binding SelectedMetadataProvider}" MinWidth="220" />
+          <Button Content="Download missing metadata" Command="{Binding DownloadMissingMetadataForFilteredCommand}" />
+          <Button Content="Reload" Command="{Binding ReloadCommand}" />
+        </StackPanel>
+        <ListBox ItemsSource="{Binding Games}"
+                 SelectedItem="{Binding SelectedEntry}"
+                 Background="{DynamicResource ShellContentBrush}"
+                 BorderThickness="0"
+                 IsVisible="{Binding IsListView}"
+                 DoubleTapped="OnGamesDoubleTapped">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <ContentPresenter Content="{Binding}" />
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <ListBox ItemsSource="{Binding Games}"
+                 SelectedItem="{Binding SelectedEntry}"
+                 Background="{DynamicResource ShellContentBrush}"
+                 BorderThickness="0"
+                 IsVisible="{Binding IsGridView}"
+                 DoubleTapped="OnGamesDoubleTapped">
+          <ListBox.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ListBox.ItemsPanel>
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Border x:Name="ItemCard"
+                      Width="140"
+                      Background="{DynamicResource ShellCardBrush}"
+                      BorderBrush="{DynamicResource ShellItemBorderBrush}"
+                      BorderThickness="1"
+                      Padding="8"
+                      Margin="0,0,8,8"
+                      CornerRadius="4">
+                <StackPanel Spacing="6">
+                  <Border Background="{DynamicResource ShellNavBrush}" Height="160" CornerRadius="4">
+                    <Image Source="{Binding Game, Converter={StaticResource GameCoverImageConverter}}" Stretch="UniformToFill" />
+                  </Border>
+                  <TextBlock Text="{Binding Game.Name}" Foreground="{DynamicResource ShellTextBrush}" FontSize="13" TextWrapping="Wrap" />
+                </StackPanel>
+                <Border.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="Open details"
+                              Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Game}" />
+                    <MenuItem Header="Play"
+                              Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Game}" />
+                    <MenuItem Header="Install/Uninstall"
+                              Command="{Binding DataContext.InstallCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Game}" />
+                    <MenuItem Header="Rescan install size"
+                              Command="{Binding DataContext.RescanInstallSizeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Game}" />
+                    <MenuItem Header="Download metadata (missing)"
+                              Command="{Binding DataContext.DownloadMissingMetadataCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Game}" />
+                    <MenuItem Header="Download metadata (overwrite)"
+                              Command="{Binding DataContext.DownloadMetadataCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Game}" />
+                    <Separator />
+                    <MenuItem Header="Favorite"
+                              ToggleType="CheckBox"
+                              IsChecked="{Binding Game.Favorite}"
+                              Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Game}" />
+                    <MenuItem Header="Hidden"
+                              ToggleType="CheckBox"
+                              IsChecked="{Binding Game.Hidden}"
+                              Command="{Binding DataContext.ToggleHiddenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Game}" />
+                  </ContextMenu>
+                </Border.ContextMenu>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

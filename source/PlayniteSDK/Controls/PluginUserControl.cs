@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace Playnite.SDK.Controls
 {
@@ -35,26 +35,25 @@ namespace Playnite.SDK.Controls
         /// <summary>
         ///
         /// </summary>
-        public static readonly DependencyProperty GameContextProperty = DependencyProperty.Register(
-            nameof(GameContext),
-            typeof(Game),
-            typeof(PluginUserControl),
-            new PropertyMetadata(null, GameContextPropertyChangedCallback));
+        public static readonly StyledProperty<Game> GameContextProperty =
+            AvaloniaProperty.Register<PluginUserControl, Game>(nameof(GameContext));
 
-        private static void GameContextPropertyChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        static PluginUserControl()
+        {
+            GameContextProperty.Changed.AddClassHandler<PluginUserControl>(OnGameContextPropertyChanged);
+        }
+
+        private static void OnGameContextPropertyChanged(PluginUserControl sender, AvaloniaPropertyChangedEventArgs e)
         {
             var newContext = e.NewValue as Game;
             var oldContext = e.OldValue as Game;
-            if (sender is PluginUserControl obj)
+            try
             {
-                try
-                {
-                    obj.GameContextChanged(oldContext, newContext);
-                }
-                catch (Exception exc)
-                {
-                    logger.Error(exc, $"GameContextChanged from {obj.GetType().Name} plugin control failed.");
-                }
+                sender.GameContextChanged(oldContext, newContext);
+            }
+            catch (Exception exc)
+            {
+                logger.Error(exc, $"GameContextChanged from {sender.GetType().Name} plugin control failed.");
             }
         }
 

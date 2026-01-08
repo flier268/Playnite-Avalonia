@@ -1,0 +1,55 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Playnite.DesktopApp.Avalonia.App"
+             RequestedThemeVariant="Default">
+  <TrayIcon.Icons>
+    <TrayIcons>
+      <TrayIcon Icon="avares://Playnite.DesktopApp.Avalonia/Assets/applogo.png"
+                ToolTipText="Playnite"
+                Clicked="OnTrayIconClicked">
+        <TrayIcon.Menu>
+          <NativeMenu>
+            <NativeMenuItem Header="Show" Click="OnTrayShowClicked" />
+            <NativeMenuItem Header="Exit" Click="OnTrayExitClicked" />
+          </NativeMenu>
+        </TrayIcon.Menu>
+      </TrayIcon>
+    </TrayIcons>
+  </TrayIcon.Icons>
+  <Application.Styles>
+    <FluentTheme />
+  </Application.Styles>
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="ShellHeaderBrush" Color="#F2F2F2" />
+          <SolidColorBrush x:Key="ShellNavBrush" Color="#FAFAFA" />
+          <SolidColorBrush x:Key="ShellContentBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ShellCardBrush" Color="#F5F5F5" />
+          <SolidColorBrush x:Key="ShellTextBrush" Color="#1A1A1A" />
+          <SolidColorBrush x:Key="ShellMutedTextBrush" Color="#5E5E5E" />
+          <SolidColorBrush x:Key="ShellDividerBrush" Color="#E3E3E3" />
+          <SolidColorBrush x:Key="ShellItemHoverBrush" Color="#EBEBEB" />
+          <SolidColorBrush x:Key="ShellItemSelectedBrush" Color="#E2E2E2" />
+          <SolidColorBrush x:Key="ShellItemBorderBrush" Color="#D5D5D5" />
+          <SolidColorBrush x:Key="ShellAccentBrush" Color="#2F6FED" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="ShellHeaderBrush" Color="#1E1E1E" />
+          <SolidColorBrush x:Key="ShellNavBrush" Color="#2A2A2A" />
+          <SolidColorBrush x:Key="ShellContentBrush" Color="#141414" />
+          <SolidColorBrush x:Key="ShellCardBrush" Color="#1F1F1F" />
+          <SolidColorBrush x:Key="ShellTextBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ShellMutedTextBrush" Color="#C0C0C0" />
+          <SolidColorBrush x:Key="ShellDividerBrush" Color="#3A3A3A" />
+          <SolidColorBrush x:Key="ShellItemHoverBrush" Color="#242424" />
+          <SolidColorBrush x:Key="ShellItemSelectedBrush" Color="#2C2C2C" />
+          <SolidColorBrush x:Key="ShellItemBorderBrush" Color="#2A2A2A" />
+          <SolidColorBrush x:Key="ShellAccentBrush" Color="#4C9DFF" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+</Application>

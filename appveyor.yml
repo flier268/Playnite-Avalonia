@@ -4,20 +4,15 @@ pull_requests:
 branches:
   only:
   - master
-skip_non_tags: true
-image: Visual Studio 2019
+
+image: Visual Studio 2022
 shallow_clone: true
-environment:
-  LicensedDependenciesUrl:
-    secure: ZTSg1DK6QAtwZoCBUDQ94cIaMCKWgSeJMI0dCpVJBPE40+UqG9MNu+UJjjGWjvVa
-  OnlineInstallerConfig: https://playnite.link/build/installer_mirrors.txt
+
 build_script:
-- pwsh: .\build\build.ps1 -Package -SdkNuget -LicensedDependenciesUrl $env:LicensedDependenciesUrl -OnlineInstallerConfig $env:OnlineInstallerConfig
+- pwsh: dotnet --info
+- pwsh: dotnet build .\source\Playnite.sln -m:1 -c Release
+- pwsh: dotnet test .\source\Tests\Playnite.Tests.Avalonia\Playnite.Tests.Avalonia.csproj -c Release --no-build
+- pwsh: dotnet test .\source\Tests\Playnite.DesktopApp.Tests.Avalonia\Playnite.DesktopApp.Tests.Avalonia.csproj -c Release --no-build
+- pwsh: dotnet test .\source\Tests\Playnite.FullscreenApp.Tests.Avalonia\Playnite.FullscreenApp.Tests.Avalonia.csproj -c Release --no-build
+
 test: off
-artifacts:
-- path: 'build\Playnite.zip'
-deploy:
-- provider: Webhook
-  url: https://app.signpath.io/API/v1/4028e7e6-f183-4bbf-9640-c4b4d9a6992d/Integrations/AppVeyor?ProjectSlug=Playnite&SigningPolicySlug=release-signing
-  authorization:
-    secure: ZXw8Ro7eQ0opsdjLpNH7ZgTgS8ycnud7ag2qNOMRvqdxBmvegj+7QHrsh4pSgTSINhB5tbTZwgiMKFDjJV9QHg==

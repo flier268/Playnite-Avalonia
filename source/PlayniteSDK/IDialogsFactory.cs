@@ -4,13 +4,47 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
+using Avalonia.Controls;
+using Avalonia.Threading;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 namespace Playnite.SDK
 {
+    public enum MessageBoxButton
+    {
+        OK = 0,
+        OKCancel = 1,
+        YesNo = 2,
+        YesNoCancel = 3
+    }
+
+    public enum MessageBoxResult
+    {
+        None = 0,
+        OK = 1,
+        Cancel = 2,
+        Yes = 6,
+        No = 7
+    }
+
+    public enum MessageBoxImage
+    {
+        None = 0,
+        Information = 1,
+        Warning = 2,
+        Error = 3,
+        Question = 4
+    }
+
+    [Flags]
+    public enum MessageBoxOptions
+    {
+        None = 0,
+        RightAlign = 1,
+        RtlReading = 2
+    }
+
     /// <summary>
     /// Represents message box response options.
     /// </summary>
@@ -111,7 +145,7 @@ namespace Playnite.SDK
             set
             {
                 progressMaxValue = value;
-                MainDispatcher?.Invoke(() => OnPropertyChanged(), DispatcherPriority.Send);
+                MainDispatcher?.Post(() => OnPropertyChanged());
             }
         }
 
@@ -125,7 +159,7 @@ namespace Playnite.SDK
             set
             {
                 currentProgressValue = value;
-                MainDispatcher?.Invoke(() => OnPropertyChanged(), DispatcherPriority.Send);
+                MainDispatcher?.Post(() => OnPropertyChanged());
             }
         }
 
@@ -139,7 +173,7 @@ namespace Playnite.SDK
             set
             {
                 text = value?.GetLocalized();
-                MainDispatcher?.Invoke(() => OnPropertyChanged(), DispatcherPriority.Send);
+                MainDispatcher?.Post(() => OnPropertyChanged());
             }
         }
 
@@ -153,7 +187,7 @@ namespace Playnite.SDK
             set
             {
                 isIndeterminate = value;
-                MainDispatcher?.Invoke(() => OnPropertyChanged(), DispatcherPriority.Send);
+                MainDispatcher?.Post(() => OnPropertyChanged());
             }
         }
 

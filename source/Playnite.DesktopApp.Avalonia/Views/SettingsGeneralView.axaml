@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:Playnite.DesktopApp.Avalonia.Converters"
+             x:Class="Playnite.DesktopApp.Avalonia.Views.SettingsGeneralView">
+  <UserControl.Resources>
+    <conv:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
+  </UserControl.Resources>
+  <StackPanel Spacing="10">
+    <TextBlock Text="{Binding Header}" Foreground="{DynamicResource ShellTextBrush}" FontSize="20" />
+    <TextBlock Text="{Binding Description}" Foreground="{DynamicResource ShellMutedTextBrush}" TextWrapping="Wrap" />
+
+    <TextBlock Text="{Binding StatusMessage}"
+               Foreground="{DynamicResource ShellMutedTextBrush}"
+               IsVisible="{Binding StatusMessage, Converter={StaticResource StringNotEmptyConverter}}"
+               TextWrapping="Wrap" />
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Language" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <ComboBox ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguage}" MinWidth="240" />
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Startup" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <CheckBox Content="Start in fullscreen" IsChecked="{Binding StartInFullscreen}" />
+        <CheckBox Content="Start minimized" IsChecked="{Binding StartMinimized}" />
+        <CheckBox Content="Start on system boot" IsChecked="{Binding StartOnBoot}" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="After game start" Foreground="{DynamicResource ShellMutedTextBrush}" VerticalAlignment="Center" />
+          <ComboBox ItemsSource="{Binding AfterLaunchOptions}" SelectedItem="{Binding AfterLaunch}" MinWidth="180" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="After game close" Foreground="{DynamicResource ShellMutedTextBrush}" VerticalAlignment="Center" />
+          <ComboBox ItemsSource="{Binding AfterGameCloseOptions}" SelectedItem="{Binding AfterGameClose}" MinWidth="180" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Tray" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <CheckBox Content="Enable tray icon" IsChecked="{Binding EnableTray}" />
+        <CheckBox Content="Minimize to tray" Margin="20,0,0,0" IsEnabled="{Binding EnableTray}" IsChecked="{Binding MinimizeToTray}" />
+        <CheckBox Content="Close to tray" Margin="20,0,0,0" IsEnabled="{Binding EnableTray}" IsChecked="{Binding CloseToTray}" />
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Import" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <CheckBox Content="Download metadata on import" IsChecked="{Binding DownloadMetadataOnImport}" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Playtime import mode" Foreground="{DynamicResource ShellMutedTextBrush}" VerticalAlignment="Center" />
+          <ComboBox ItemsSource="{Binding PlaytimeImportModeOptions}" SelectedItem="{Binding PlaytimeImportMode}" MinWidth="160" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Library" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <CheckBox Content="Reload library on startup" IsChecked="{Binding UpdateLibStartup}" />
+        <CheckBox Content="Scan install size on library update" IsChecked="{Binding ScanLibInstallSizeOnLibUpdate}" />
+        <CheckBox Content="Fuzzy matching in name filter (not wired yet)" IsChecked="{Binding FuzzyMatchingInNameFilter}" />
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Performance" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <CheckBox Content="Disable hardware acceleration (not wired yet)" IsChecked="{Binding DisableHwAcceleration}" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

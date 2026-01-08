@@ -1,0 +1,134 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Playnite.FullscreenApp.Avalonia.ViewModels"
+        x:Class="Playnite.FullscreenApp.Avalonia.MainWindow"
+        Title="Playnite Fullscreen (Avalonia)"
+        Width="1280"
+        Height="720">
+  <Design.DataContext>
+    <vm:FullscreenShellViewModel />
+  </Design.DataContext>
+
+  <Grid RowDefinitions="Auto,*" ColumnDefinitions="360,*">
+    <Border Grid.ColumnSpan="2" Padding="16" Background="#202020">
+      <DockPanel>
+        <TextBlock Text="Playnite Fullscreen (Avalonia)" Foreground="White" FontSize="20" />
+        <TextBlock DockPanel.Dock="Right" Text="{Binding Status}" Foreground="#BBBBBB" VerticalAlignment="Center" />
+      </DockPanel>
+    </Border>
+
+    <Border Grid.Row="1" Padding="12" Background="#151515">
+      <StackPanel Spacing="10">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Reload" Command="{Binding ReloadCommand}" />
+          <Button Content="Play" Command="{Binding PlayCommand}" />
+          <Button Content="Install/Uninstall" Command="{Binding ToggleInstallCommand}" />
+          <Button Content="Download metadata" Command="{Binding DownloadMetadataCommand}" />
+        </StackPanel>
+        <ListBox ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame}" Height="600">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Spacing="2" Margin="6">
+                <TextBlock Text="{Binding Name}" Foreground="White" />
+                <TextBlock Text="{Binding IsInstalled, StringFormat=Installed: {0}}" Foreground="#BBBBBB" FontSize="12" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="1" Grid.Column="1" Padding="18" Background="#101010">
+      <ScrollViewer>
+        <StackPanel Spacing="12">
+          <TextBlock Text="{Binding SelectedGame.Name, TargetNullValue='Select a game'}" Foreground="White" FontSize="26" />
+          <TextBlock Text="{Binding SelectedGame.Description, TargetNullValue=''}" Foreground="#BBBBBB" TextWrapping="Wrap" />
+          <TextBlock Text="{Binding SelectedGame.LastActivity, StringFormat=Last activity: {0:yyyy-MM-dd}, TargetNullValue='Last activity: -'}" Foreground="#BBBBBB" />
+          <TextBlock Text="{Binding SelectedGame.IsInstalled, StringFormat=Installed: {0}, TargetNullValue='Installed: -'}" Foreground="#BBBBBB" />
+
+          <Border Background="#161616" BorderBrush="#303030" BorderThickness="1" Padding="12" CornerRadius="6">
+            <StackPanel Spacing="10">
+              <DockPanel>
+                <TextBlock Text="Actions" Foreground="White" FontSize="18" />
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+                  <Button Content="+ File" Command="{Binding AddFileActionCommand}" />
+                  <Button Content="+ URL" Command="{Binding AddUrlActionCommand}" />
+                  <Button Content="+ Emulator" Command="{Binding AddEmulatorActionCommand}" />
+                  <Button Content="+ Script" Command="{Binding AddScriptActionCommand}" />
+                </StackPanel>
+              </DockPanel>
+
+              <Grid ColumnDefinitions="280,*" RowDefinitions="Auto">
+                <Border Background="#141414" BorderBrush="#303030" BorderThickness="1" Padding="6" CornerRadius="4">
+                  <ListBox ItemsSource="{Binding Actions}"
+                           SelectedItem="{Binding SelectedAction}"
+                           Background="Transparent"
+                           BorderThickness="0"
+                           Height="360">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <StackPanel Spacing="2" Margin="6">
+                          <TextBlock Text="{Binding Name}" Foreground="White" />
+                          <TextBlock Text="{Binding Type, StringFormat=Type: {0}}" Foreground="#BBBBBB" FontSize="12" />
+                          <TextBlock Text="{Binding IsPlayAction, StringFormat=Play: {0}}" Foreground="#BBBBBB" FontSize="12" />
+                        </StackPanel>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </Border>
+
+                <StackPanel Grid.Column="1" Spacing="8" Margin="12,0,0,0">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Set as Play" Command="{Binding SetPlayActionCommand}" />
+                    <Button Content="Remove" Command="{Binding RemoveActionCommand}" />
+                    <Button Content="Save" Command="{Binding SaveActionsCommand}" />
+                  </StackPanel>
+
+                  <TextBlock Text="{Binding SelectedAction.Type, StringFormat=Type: {0}, TargetNullValue='Type: -'}" Foreground="#BBBBBB" />
+                  <CheckBox Content="Is Play Action" IsChecked="{Binding SelectedAction.IsPlayAction}" Foreground="#DDDDDD" />
+
+                  <TextBlock Text="Name" Foreground="White" />
+                  <TextBox Text="{Binding SelectedAction.Name}" />
+
+                  <TextBlock Text="Path / URL" Foreground="White" />
+                  <TextBox Text="{Binding SelectedAction.Path}" />
+
+                  <TextBlock Text="Arguments" Foreground="White" />
+                  <TextBox Text="{Binding SelectedAction.Arguments}" />
+
+                  <TextBlock Text="Working Directory" Foreground="White" />
+                  <TextBox Text="{Binding SelectedAction.WorkingDir}" />
+
+                  <Border IsVisible="{Binding IsScriptActionSelected}" Background="#121212" Padding="8" CornerRadius="4">
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="Script" Foreground="White" />
+                      <TextBox Text="{Binding SelectedAction.Script}" AcceptsReturn="True" Height="140" />
+                    </StackPanel>
+                  </Border>
+
+                  <Border IsVisible="{Binding IsEmulatorActionSelected}" Background="#121212" Padding="8" CornerRadius="4">
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="ROM" Foreground="White" />
+                      <ComboBox ItemsSource="{Binding Roms}" SelectedItem="{Binding SelectedRom}" />
+
+                      <TextBlock Text="Emulator" Foreground="White" />
+                      <ComboBox ItemsSource="{Binding Emulators}" SelectedItem="{Binding SelectedEmulator}" />
+
+                      <TextBlock Text="Emulator Profile" Foreground="White" />
+                      <ComboBox ItemsSource="{Binding EmulatorProfiles}" SelectedItem="{Binding SelectedEmulatorProfile}" />
+
+                      <TextBlock Text="Additional Arguments" Foreground="White" />
+                      <TextBox Text="{Binding SelectedAction.AdditionalArguments}" />
+
+                      <CheckBox Content="Override Default Args" IsChecked="{Binding SelectedAction.OverrideDefaultArgs}" Foreground="#DDDDDD" />
+                    </StackPanel>
+                  </Border>
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </Border>
+  </Grid>
+</Window>

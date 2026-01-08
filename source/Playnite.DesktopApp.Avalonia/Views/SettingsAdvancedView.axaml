@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:Playnite.DesktopApp.Avalonia.Converters"
+             x:Class="Playnite.DesktopApp.Avalonia.Views.SettingsAdvancedView">
+  <UserControl.Resources>
+    <conv:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
+  </UserControl.Resources>
+  <StackPanel Spacing="10">
+    <TextBlock Text="{Binding Header}" Foreground="{DynamicResource ShellTextBrush}" FontSize="20" />
+    <TextBlock Text="{Binding Description}" Foreground="{DynamicResource ShellMutedTextBrush}" TextWrapping="Wrap" />
+
+    <TextBlock Text="{Binding Status}"
+               Foreground="{DynamicResource ShellMutedTextBrush}"
+               IsVisible="{Binding Status, Converter={StaticResource StringNotEmptyConverter}}"
+               TextWrapping="Wrap" />
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Paths" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <StackPanel Spacing="6">
+          <TextBlock Text="User data folder" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+          <TextBox Text="{Binding UserDataPath}" IsReadOnly="True" />
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="Open folder" Command="{Binding OpenUserDataFolderCommand}" />
+            <Button Content="Open settings file" Command="{Binding OpenSettingsFileCommand}" />
+          </StackPanel>
+        </StackPanel>
+        <StackPanel Spacing="6">
+          <TextBlock Text="Library root" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+          <TextBox Text="{Binding LibraryRootPath}" IsReadOnly="True" />
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="Open folder" Command="{Binding OpenLibraryRootCommand}" />
+            <Button Content="Reload library" Command="{Binding ReloadLibraryCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Environment overrides" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <StackPanel Spacing="6">
+          <TextBlock Text="PLAYNITE_USERDATA_PATH" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+          <TextBox Text="{Binding EnvUserDataPath}" IsReadOnly="True" />
+          <TextBlock Text="PLAYNITE_DB_PATH" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+          <TextBox Text="{Binding EnvDbPath}" IsReadOnly="True" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Reset" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <TextBlock Text="Resets Avalonia settings only (does not touch your games database)."
+                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                   TextWrapping="Wrap" />
+        <Button Content="Reset settings to defaults" Command="{Binding ResetSettingsCommand}" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

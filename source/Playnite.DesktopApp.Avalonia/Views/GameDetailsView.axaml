@@ -1,0 +1,151 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:Playnite.DesktopApp.Avalonia.Converters"
+             x:Class="Playnite.DesktopApp.Avalonia.Views.GameDetailsView">
+  <UserControl.Resources>
+    <conv:GameCoverImageConverter x:Key="GameCoverImageConverter" />
+  </UserControl.Resources>
+
+  <Grid RowDefinitions="Auto,*" ColumnDefinitions="*">
+    <Border Background="{DynamicResource ShellHeaderBrush}" Padding="10">
+      <DockPanel>
+        <Button Content="Back" Command="{Binding BackCommand}" DockPanel.Dock="Left" />
+        <TextBlock Text="{Binding Game.Name, TargetNullValue='Game Details'}"
+                   Foreground="{DynamicResource ShellTextBrush}"
+                   FontSize="18"
+                   VerticalAlignment="Center"
+                   Margin="12,0,0,0" />
+      </DockPanel>
+    </Border>
+
+    <ScrollViewer Grid.Row="1">
+      <StackPanel Margin="16" Spacing="12">
+        <Border Background="{DynamicResource ShellNavBrush}" Height="320" CornerRadius="8">
+          <Image Source="{Binding Game, Converter={StaticResource GameCoverImageConverter}}" Stretch="UniformToFill" />
+        </Border>
+
+        <TextBlock Text="{Binding Game.Name, TargetNullValue='Select a game'}" Foreground="{DynamicResource ShellTextBrush}" FontSize="22" />
+        <TextBlock Text="{Binding Game.Description, TargetNullValue='No description'}"
+                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                   TextWrapping="Wrap" />
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Play" Command="{Binding PlayCommand}" />
+          <Button Content="Install/Uninstall" Command="{Binding InstallCommand}" />
+          <Button Content="Rescan install size" Command="{Binding RescanInstallSizeCommand}" />
+        </StackPanel>
+
+        <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Metadata" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <ComboBox ItemsSource="{Binding MetadataProviders}" SelectedItem="{Binding SelectedMetadataProvider}" MinWidth="260" />
+              <Button Content="Refresh" Command="{Binding RefreshMetadataProvidersCommand}" />
+              <Button Content="Download" Command="{Binding DownloadMetadataCommand}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+          <StackPanel Spacing="6">
+            <TextBlock Text="Info" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+            <TextBlock Text="{Binding Game.LastActivity, StringFormat=Last activity: {0:yyyy-MM-dd}, TargetNullValue='Last activity: -'}"
+                       Foreground="{DynamicResource ShellMutedTextBrush}" />
+            <TextBlock Text="{Binding Game.IsInstalled, StringFormat=Installed: {0}, TargetNullValue='Installed: -'}"
+                       Foreground="{DynamicResource ShellMutedTextBrush}" />
+            <TextBlock Text="{Binding Game.Favorite, StringFormat=Favorite: {0}, TargetNullValue='Favorite: -'}"
+                       Foreground="{DynamicResource ShellMutedTextBrush}" />
+            <TextBlock Text="{Binding Game.Hidden, StringFormat=Hidden: {0}, TargetNullValue='Hidden: -'}"
+                       Foreground="{DynamicResource ShellMutedTextBrush}" />
+            <TextBlock Text="{Binding Game.InstallSize, StringFormat=Install size (bytes): {0}, TargetNullValue='Install size: -'}"
+                       Foreground="{DynamicResource ShellMutedTextBrush}" />
+            <TextBlock Text="{Binding Game.LastSizeScanDate, StringFormat=Last size scan: {0:yyyy-MM-dd HH:mm}, TargetNullValue='Last size scan: -'}"
+                       Foreground="{DynamicResource ShellMutedTextBrush}" />
+            <TextBlock Text="{Binding LastAction, StringFormat=Last action: {0}}"
+                       Foreground="{DynamicResource ShellMutedTextBrush}" />
+          </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource ShellCardBrush}"
+                BorderBrush="{DynamicResource ShellItemBorderBrush}"
+                BorderThickness="1"
+                Padding="12"
+                CornerRadius="6">
+          <StackPanel Spacing="10">
+            <DockPanel>
+              <TextBlock Text="Game Actions" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+                <Button Content="+ File" Command="{Binding AddFileActionCommand}" />
+                <Button Content="+ URL" Command="{Binding AddUrlActionCommand}" />
+                <Button Content="+ Emulator" Command="{Binding AddEmulatorActionCommand}" />
+                <Button Content="+ Script" Command="{Binding AddScriptActionCommand}" />
+              </StackPanel>
+            </DockPanel>
+
+            <Grid ColumnDefinitions="240,*" RowDefinitions="Auto">
+              <Border Background="{DynamicResource ShellNavBrush}"
+                      BorderBrush="{DynamicResource ShellItemBorderBrush}"
+                      BorderThickness="1"
+                      CornerRadius="4"
+                      Padding="6">
+                <ListBox ItemsSource="{Binding Actions}"
+                         SelectedItem="{Binding SelectedAction}"
+                         Background="Transparent"
+                         BorderThickness="0">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <StackPanel Spacing="2" Margin="4">
+                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource ShellTextBrush}" />
+                        <TextBlock Text="{Binding Type, StringFormat=Type: {0}}"
+                                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                                   FontSize="12" />
+                        <TextBlock Text="{Binding IsPlayAction, StringFormat=Play: {0}}"
+                                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                                   FontSize="12" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </Border>
+
+              <StackPanel Grid.Column="1" Spacing="8" Margin="12,0,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Button Content="Set as Play" Command="{Binding SetPlayActionCommand}" />
+                  <Button Content="Remove" Command="{Binding RemoveActionCommand}" />
+                  <Button Content="Save" Command="{Binding SaveActionsCommand}" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding SelectedAction.Type, StringFormat=Type: {0}, TargetNullValue='Type: -'}"
+                           Foreground="{DynamicResource ShellMutedTextBrush}" />
+
+                <TextBlock Text="Name" Foreground="{DynamicResource ShellTextBrush}" />
+                <TextBox Text="{Binding SelectedAction.Name}" />
+
+                <CheckBox Content="Is Play Action" IsChecked="{Binding SelectedAction.IsPlayAction}" />
+
+                <TextBlock Text="Path / URL" Foreground="{DynamicResource ShellTextBrush}" />
+                <TextBox Text="{Binding SelectedAction.Path}" />
+
+                <TextBlock Text="Arguments" Foreground="{DynamicResource ShellTextBrush}" />
+                <TextBox Text="{Binding SelectedAction.Arguments}" />
+
+                <TextBlock Text="Working Directory" Foreground="{DynamicResource ShellTextBrush}" />
+                <TextBox Text="{Binding SelectedAction.WorkingDir}" />
+
+                <TextBlock Text="Script" Foreground="{DynamicResource ShellTextBrush}" />
+                <TextBox Text="{Binding SelectedAction.Script}" AcceptsReturn="True" Height="120" />
+
+                <TextBlock Text="Emulator" Foreground="{DynamicResource ShellTextBrush}" />
+                <ComboBox ItemsSource="{Binding Emulators}"
+                          SelectedItem="{Binding SelectedEmulator}" />
+
+                <TextBlock Text="Emulator Profile Id / Name" Foreground="{DynamicResource ShellTextBrush}" />
+                <TextBox Text="{Binding SelectedAction.EmulatorProfileId}" />
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

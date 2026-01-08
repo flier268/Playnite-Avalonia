@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <!-- Codex environment lacks workload locator SDKs; disable workload imports for deterministic builds. -->
+    <MSBuildEnableWorkloadResolver>false</MSBuildEnableWorkloadResolver>
+    <!-- Avoid flaky parallel MSBuild node failures (exit code 1 with no logged errors) in this environment. -->
+    <BuildInParallel>false</BuildInParallel>
+    <!-- Avoid NuGet static-graph restore MSBuild node failures; prefer legacy restore evaluation for now. -->
+    <RestoreUseStaticGraphEvaluation>false</RestoreUseStaticGraphEvaluation>
+  </PropertyGroup>
+</Project>

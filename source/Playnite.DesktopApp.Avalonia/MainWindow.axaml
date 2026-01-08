@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:Playnite.DesktopApp.Avalonia.Views"
+        xmlns:vm="clr-namespace:Playnite.DesktopApp.Avalonia.ViewModels"
+        x:Class="Playnite.DesktopApp.Avalonia.MainWindow"
+        Title="Playnite Desktop (Avalonia)"
+        Width="1200"
+        Height="760">
+  <Window.DataTemplates>
+    <DataTemplate DataType="{x:Type vm:LibraryViewModel}">
+      <views:LibraryView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:GameDetailsViewModel}">
+      <views:GameDetailsView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:AddonsViewModel}">
+      <views:AddonsView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+      <views:SettingsView />
+    </DataTemplate>
+  </Window.DataTemplates>
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="260,*" Background="{DynamicResource ShellContentBrush}">
+    <Border Grid.Row="0" Grid.ColumnSpan="2" Background="{DynamicResource ShellHeaderBrush}" Padding="12">
+      <DockPanel>
+        <TextBlock Text="{Binding Title}" Foreground="{DynamicResource ShellTextBrush}" FontSize="18" DockPanel.Dock="Left" />
+        <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource ShellMutedTextBrush}" DockPanel.Dock="Right" />
+      </DockPanel>
+    </Border>
+
+    <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource ShellNavBrush}">
+      <StackPanel Margin="12" Spacing="8">
+        <TextBlock Text="Navigation" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <Button Content="Library" Command="{Binding ShowLibraryCommand}" />
+        <Button Content="Add-ons" Command="{Binding ShowAddonsCommand}" />
+        <Button Content="Settings" Command="{Binding ShowSettingsCommand}" />
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource ShellContentBrush}" Padding="16">
+      <ContentControl Content="{Binding CurrentView}" />
+    </Border>
+
+    <Border Grid.Row="2" Grid.ColumnSpan="2" Background="{DynamicResource ShellHeaderBrush}" Padding="8">
+      <TextBlock Text="{Binding FooterText}" Foreground="{DynamicResource ShellMutedTextBrush}" />
+    </Border>
+  </Grid>
+</Window>

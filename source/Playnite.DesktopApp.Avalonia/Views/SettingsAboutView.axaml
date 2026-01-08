@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:Playnite.DesktopApp.Avalonia.Converters"
+             x:Class="Playnite.DesktopApp.Avalonia.Views.SettingsAboutView">
+  <UserControl.Resources>
+    <conv:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
+  </UserControl.Resources>
+  <StackPanel Spacing="10">
+    <TextBlock Text="{Binding Header}" Foreground="{DynamicResource ShellTextBrush}" FontSize="20" />
+    <TextBlock Text="{Binding Description}" Foreground="{DynamicResource ShellMutedTextBrush}" TextWrapping="Wrap" />
+
+    <TextBlock Text="{Binding Status}"
+               Foreground="{DynamicResource ShellMutedTextBrush}"
+               IsVisible="{Binding Status, Converter={StaticResource StringNotEmptyConverter}}"
+               TextWrapping="Wrap" />
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Version" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="App" Foreground="{DynamicResource ShellMutedTextBrush}" Width="120" />
+          <TextBlock Text="{Binding AppVersion}" Foreground="{DynamicResource ShellTextBrush}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text=".NET" Foreground="{DynamicResource ShellMutedTextBrush}" Width="120" />
+          <TextBlock Text="{Binding Framework}" Foreground="{DynamicResource ShellTextBrush}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="OS" Foreground="{DynamicResource ShellMutedTextBrush}" Width="120" />
+          <TextBlock Text="{Binding Os}" Foreground="{DynamicResource ShellTextBrush}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Architecture" Foreground="{DynamicResource ShellMutedTextBrush}" Width="120" />
+          <TextBlock Text="{Binding ProcessArchitecture}" Foreground="{DynamicResource ShellTextBrush}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Paths" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <TextBlock Text="User data" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        <TextBox Text="{Binding UserDataPath}" IsReadOnly="True" />
+        <TextBlock Text="Library root" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        <TextBox Text="{Binding LibraryRootPath}" IsReadOnly="True" />
+        <Button Content="Open user data folder" Command="{Binding OpenUserDataCommand}" />
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Links" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Button Content="Project home" Command="{Binding OpenProjectHomeCommand}" />
+          <Button Content="Releases" Command="{Binding OpenReleasesCommand}" />
+          <Button Content="Issues" Command="{Binding OpenIssuesCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

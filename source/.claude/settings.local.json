@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(dotnet build:*)",
+      "Bash(Select-String -Pattern \"error\" -Context 0,2)"
+    ]
+  }
+}

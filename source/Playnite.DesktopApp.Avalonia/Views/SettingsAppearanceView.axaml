@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Playnite.DesktopApp.Avalonia.Views.SettingsAppearanceView">
+  <StackPanel Spacing="10">
+    <TextBlock Text="{Binding Header}" Foreground="{DynamicResource ShellTextBrush}" FontSize="20" />
+    <TextBlock Text="{Binding Description}" Foreground="{DynamicResource ShellMutedTextBrush}" TextWrapping="Wrap" />
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Theme" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <ComboBox ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedTheme}" />
+        <TextBlock Text="Applies immediately and is saved to user settings."
+                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                   FontSize="12" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

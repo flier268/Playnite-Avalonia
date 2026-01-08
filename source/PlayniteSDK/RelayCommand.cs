@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace Playnite.SDK
@@ -16,25 +12,21 @@ namespace Playnite.SDK
         /// <summary>
         ///
         /// </summary>
-        public KeyGesture Gesture
-        {
-            get; set;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        public string GestureText => Gesture?.GetDisplayStringForCulture(CultureInfo.CurrentUICulture);
-
-        /// <summary>
-        ///
-        /// </summary>
         public event EventHandler CanExecuteChanged
         {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
+            add { canExecuteChanged += value; }
+            remove { canExecuteChanged -= value; }
         }
 
+        private event EventHandler canExecuteChanged;
+
+        /// <summary>
+        /// Raises <see cref="CanExecuteChanged"/> to refresh command state.
+        /// </summary>
+        public void RaiseCanExecuteChanged()
+        {
+            canExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
         /// <summary>
         ///
         /// </summary>
@@ -62,7 +54,7 @@ namespace Playnite.SDK
         /// </summary>
         /// <param name="execute"></param>
         public RelayCommand(Action execute)
-            : this(execute, null, null)
+            : this(execute, null)
         {
         }
 
@@ -70,12 +62,6 @@ namespace Playnite.SDK
         ///
         /// </summary>
         /// <param name="execute"></param>
-        /// <param name="gesture"></param>
-        public RelayCommand(Action execute, KeyGesture gesture)
-            : this(execute, null, gesture)
-        {
-        }
-
         /// <summary>
         ///
         /// </summary>
@@ -91,13 +77,18 @@ namespace Playnite.SDK
         /// </summary>
         /// <param name="execute"></param>
         /// <param name="canExecute"></param>
-        /// <param name="gesture"></param>
-        public RelayCommand(Action execute, Func<bool> canExecute, KeyGesture gesture)
+        /// <param name="gestureText">Optional gesture hint for UI display.</param>
+        public RelayCommand(Action execute, Func<bool> canExecute, string gestureText)
         {
             this.execute = execute;
             this.canExecute = canExecute;
-            Gesture = gesture;
+            GestureText = gestureText;
         }
+
+        /// <summary>
+        /// Optional gesture hint for UI display.
+        /// </summary>
+        public string GestureText { get; }
 
         /// <summary>
         ///
@@ -138,7 +129,7 @@ namespace Playnite.SDK
         /// </summary>
         /// <param name="execute"></param>
         public RelayCommand(Action<T> execute)
-            : this(execute, null, null)
+            : this(execute, null)
         {
         }
 
@@ -146,12 +137,6 @@ namespace Playnite.SDK
         ///
         /// </summary>
         /// <param name="execute"></param>
-        /// <param name="gesture"></param>
-        public RelayCommand(Action<T> execute, KeyGesture gesture)
-            : this(execute, null, gesture)
-        {
-        }
-
         /// <summary>
         ///
         /// </summary>
@@ -167,13 +152,18 @@ namespace Playnite.SDK
         /// </summary>
         /// <param name="execute"></param>
         /// <param name="canExecute"></param>
-        /// <param name="gesture"></param>
-        public RelayCommand(Action<T> execute, Predicate<T> canExecute, KeyGesture gesture)
+        /// <param name="gestureText">Optional gesture hint for UI display.</param>
+        public RelayCommand(Action<T> execute, Predicate<T> canExecute, string gestureText)
         {
             this.execute = execute;
             this.canExecute = canExecute;
-            Gesture = gesture;
+            GestureText = gestureText;
         }
+
+        /// <summary>
+        /// Optional gesture hint for UI display.
+        /// </summary>
+        public string GestureText { get; }
 
         /// <summary>
         ///

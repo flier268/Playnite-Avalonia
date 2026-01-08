@@ -6,10 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Markup;
-using System.Windows.Media;
+using Avalonia.Controls;
+using Avalonia.Data.Converters;
+using Avalonia.Markup.Xaml;
 
 namespace Playnite.Converters
 {

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>Playnite.SDK</RootNamespace>
     <AssemblyName>Playnite.SDK</AssemblyName>
@@ -8,7 +8,6 @@
     <Nullable>disable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <UseWPF>true</UseWPF>
 
     <!-- Assembly metadata -->
     <AssemblyTitle>Playnite SDK</AssemblyTitle>
@@ -19,6 +18,10 @@
     <AssemblyVersion>6.14.0.0</AssemblyVersion>
     <FileVersion>6.14.0.0</FileVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="..\.editorconfig">

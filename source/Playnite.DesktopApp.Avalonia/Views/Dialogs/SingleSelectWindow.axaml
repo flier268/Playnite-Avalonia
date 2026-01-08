@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Playnite.DesktopApp.Avalonia.Views.Dialogs.SingleSelectWindow"
+        Width="720"
+        Height="520"
+        MinWidth="520"
+        MinHeight="360"
+        Background="{DynamicResource ShellContentBrush}"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+    <TextBlock Text="{Binding Title}"
+               FontSize="18"
+               FontWeight="SemiBold"
+               Foreground="{DynamicResource ShellTextBrush}"
+               Margin="0,0,0,12" />
+
+    <Border Grid.Row="1"
+            Background="{DynamicResource ShellCardBrush}"
+            BorderBrush="{DynamicResource ShellItemBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="6"
+            Padding="8"
+            Margin="0,0,0,12">
+      <ListBox x:Name="ItemsList"
+               ItemsSource="{Binding Items}"
+               SelectedItem="{Binding SelectedItem}"
+                Background="Transparent"
+                BorderThickness="0"
+               DoubleTapped="OnItemsDoubleTapped">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <StackPanel Spacing="2" Margin="4">
+              <TextBlock Text="{Binding PrimaryText}"
+                         Foreground="{DynamicResource ShellTextBrush}"
+                         FontSize="14" />
+              <TextBlock Text="{Binding SecondaryText}"
+                         Foreground="{DynamicResource ShellMutedTextBrush}"
+                         FontSize="12"
+                         TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Cancel" Click="OnCancelClick" />
+      <Button Content="OK" Click="OnOkClick" IsDefault="True" />
+    </StackPanel>
+  </Grid>
+</Window>

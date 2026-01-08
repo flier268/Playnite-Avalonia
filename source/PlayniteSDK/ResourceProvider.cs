@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
+using Avalonia;
 
 namespace Playnite.SDK
 {
@@ -64,7 +64,7 @@ namespace Playnite.SDK
             }
             else
             {
-                var resource = Application.Current?.TryFindResource(key);
+                var resource = GetResource(key);
                 return resource == null ? $"<!{key}!>" : resource as string;
             }
         }
@@ -82,7 +82,17 @@ namespace Playnite.SDK
             }
             else
             {
-                return Application.Current?.TryFindResource(key);
+                if (Application.Current == null)
+                {
+                    return null;
+                }
+
+                if (Application.Current.TryGetResource(key, null, out var value))
+                {
+                    return value;
+                }
+
+                return null;
             }
         }
 
@@ -94,7 +104,13 @@ namespace Playnite.SDK
         /// <returns></returns>
         public static T GetResource<T>(string key)
         {
-            return (T)Application.Current?.TryFindResource(key);
+            var resource = GetResource(key);
+            if (resource is T typed)
+            {
+                return typed;
+            }
+
+            return default;
         }
 
         internal static void SetGlobalProvider(IResourceProvider provider)

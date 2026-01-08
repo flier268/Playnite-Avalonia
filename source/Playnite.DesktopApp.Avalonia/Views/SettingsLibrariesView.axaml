@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Playnite.DesktopApp.Avalonia.Views.SettingsLibrariesView">
+  <StackPanel Spacing="10">
+    <TextBlock Text="{Binding Header}" Foreground="{DynamicResource ShellTextBrush}" FontSize="20" />
+
+    <Border Background="{DynamicResource ShellCardBrush}"
+            BorderBrush="{DynamicResource ShellItemBorderBrush}"
+            BorderThickness="1"
+            Padding="12"
+            CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Database path" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <TextBlock Text="Set a Playnite profile folder containing games.db/platforms.db/genres.db/emulators.db."
+                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                   TextWrapping="Wrap" />
+        <TextBox Text="{Binding LibraryDbPath}" Watermark="e.g. D:\Playnite\library" />
+
+        <TextBlock Text="{Binding CurrentStoreRoot, StringFormat=Current store: {0}, TargetNullValue='Current store: -'}"
+                   Foreground="{DynamicResource ShellMutedTextBrush}" />
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Save + Reload" Command="{Binding SaveAndReloadCommand}" />
+          <TextBlock Text="{Binding Status}" Foreground="{DynamicResource ShellMutedTextBrush}" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <TextBlock Text="Note: Environment variable PLAYNITE_DB_PATH overrides this setting."
+                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                   TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

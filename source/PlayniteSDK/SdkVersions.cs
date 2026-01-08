@@ -16,7 +16,11 @@ namespace Playnite.SDK
         /// </summary>
         public static System.Version SDKVersion
         {
-            get => System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            get
+            {
+                var env = Environment.GetEnvironmentVariable("PLAYNITE_SDK_VERSION");
+                return Version.TryParse(env, out var version) ? version : new Version(0, 0);
+            }
         }
     }
 }

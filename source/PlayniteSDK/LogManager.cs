@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -98,22 +96,11 @@ namespace Playnite.SDK
         /// Gets logger with name of calling class.
         /// </summary>
         /// <returns>Logger.</returns>
-        [MethodImpl(MethodImplOptions.NoInlining)]
         public static ILogger GetLogger()
         {
             if (logManager != null)
             {
-                var asmName = Assembly.GetCallingAssembly().GetName().Name;
-                var isCore = asmName == "Playnite.DesktopApp" || asmName == "Playnite.FullscreenApp" || asmName == "Playnite";
-                var className = (new StackFrame(1)).GetMethod().DeclaringType.Name;
-                if (isCore)
-                {
-                    return logManager.GetLogger(className);
-                }
-                else
-                {
-                    return logManager.GetLogger($"{asmName}#{className}");
-                }
+                return logManager.GetLogger("Default");
             }
             else
             {
@@ -126,7 +113,6 @@ namespace Playnite.SDK
         /// </summary>
         /// <param name="loggerName">Logger name.</param>
         /// <returns>Logger.</returns>
-        [MethodImpl(MethodImplOptions.NoInlining)]
         public static ILogger GetLogger(string loggerName)
         {
             if (string.IsNullOrEmpty(loggerName))
@@ -136,16 +122,7 @@ namespace Playnite.SDK
 
             if (logManager != null)
             {
-                var asmName = Assembly.GetCallingAssembly().GetName().Name;
-                var isCore = asmName == "Playnite.DesktopApp" || asmName == "Playnite.FullscreenApp" || asmName == "Playnite";
-                if (isCore || loggerName.Contains("#"))
-                {
-                    return logManager.GetLogger(loggerName);
-                }
-                else
-                {
-                    return logManager.GetLogger($"{asmName}#{loggerName}");
-                }
+                return logManager.GetLogger(loggerName);
             }
             else
             {

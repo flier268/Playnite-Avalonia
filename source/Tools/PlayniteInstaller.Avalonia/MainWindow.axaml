@@ -1,0 +1,10 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PlayniteInstaller.Avalonia.MainWindow"
+        Title="Playnite Installer (Avalonia)"
+        Width="900"
+        Height="560">
+  <Border Padding="24">
+    <TextBlock Text="Playnite Installer Avalonia bootstrap" />
+  </Border>
+</Window>

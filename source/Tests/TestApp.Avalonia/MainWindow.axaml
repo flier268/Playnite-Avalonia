@@ -1,0 +1,10 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TestApp.Avalonia.MainWindow"
+        Title="TestApp (Avalonia)"
+        Width="800"
+        Height="500">
+  <Border Padding="24">
+    <TextBlock Text="TestApp Avalonia bootstrap" />
+  </Border>
+</Window>
