@@ -5,6 +5,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Controls;
 using Playnite.Configuration;
+using Playnite.Addons;
+using Playnite.Addons.OutOfProc;
 using Playnite.DesktopApp.Avalonia.Services;
 using Playnite.Library;
 using Playnite.Metadata;
@@ -16,6 +18,7 @@ namespace Playnite.DesktopApp.Avalonia
         private IClassicDesktopStyleApplicationLifetime desktopLifetime;
         private MainWindow mainWindow;
         private TrayIcon trayIcon;
+        private OutOfProcAddonsHost outOfProcAddonsHost;
 
         public override void Initialize()
         {
@@ -37,6 +40,25 @@ namespace Playnite.DesktopApp.Avalonia
                 var libraryStore = LibraryStoreFactory.Create(settings);
                 AppServices.InitializeLibraryStore(libraryStore);
                 MetadataProviderRegistry.Default.Register(new LocalFilesMetadataProvider());
+
+                try
+                {
+                    outOfProcAddonsHost = new OutOfProcAddonsHost(
+                        AddonsManager.CreateDefault(),
+                        new OutOfProcAddonsHostOptions
+                        {
+                            RequestTimeoutMs = settings.OutOfProcAddonRequestTimeoutMs,
+                            RestartLimitPerMinute = settings.OutOfProcAddonRestartLimitPerMinute,
+                            StderrTailLines = settings.OutOfProcAddonStderrTailLines
+                        });
+                    AppServices.InitializeOutOfProcAddonsHost(outOfProcAddonsHost);
+                    outOfProcAddonsHost.StartAllEnabled(settings);
+                    desktop.Exit += (_, _) => outOfProcAddonsHost?.Dispose();
+                }
+                catch
+                {
+                }
+
                 mainWindow = new MainWindow();
                 AppServices.InitializeShell(mainWindow, libraryStore, new GameLaunchService());
                 if (settings.StartMinimized)
@@ -84,6 +106,14 @@ namespace Playnite.DesktopApp.Avalonia
             if (mainWindow != null)
             {
                 mainWindow.AllowCloseOnce();
+            }
+
+            try
+            {
+                outOfProcAddonsHost?.Dispose();
+            }
+            catch
+            {
             }
 
             desktopLifetime?.Shutdown();

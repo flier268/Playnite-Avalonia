@@ -14,6 +14,33 @@ public sealed class AddonsManager
     public const string PackedExtensionFileExtention = ".pext";
     public const string PackedThemeFileExtention = ".pthm";
 
+    private static readonly HashSet<string> DisallowedPackageFiles = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Legacy WPF Playnite dependencies.
+        "Playnite.dll",
+        "Playnite.Common.dll",
+        "Playnite.SDK.dll",
+
+        // Avalonia-first dependencies.
+        "Playnite.Core.dll",
+        "Playnite.DesktopApp.Avalonia.dll",
+        "Playnite.FullscreenApp.Avalonia.dll",
+
+        // NativeAOT/host executables can be extension-less on Unix.
+        "Playnite.DesktopApp.Avalonia",
+        "Playnite.FullscreenApp.Avalonia",
+        "Playnite.Toolbox.Avalonia",
+        "Playnite.Utilities.Avalonia",
+        "PlayniteInstaller.Avalonia",
+
+        // Windows host executables.
+        "Playnite.DesktopApp.Avalonia.exe",
+        "Playnite.FullscreenApp.Avalonia.exe",
+        "Playnite.Toolbox.Avalonia.exe",
+        "Playnite.Utilities.Avalonia.exe",
+        "PlayniteInstaller.Avalonia.exe"
+    };
+
     private readonly string userDataRootPath;
     private readonly string programRootPath;
 
@@ -102,6 +129,11 @@ public sealed class AddonsManager
                 Kind = kind.Value,
                 Type = parsed.Type,
                 Module = parsed.Module,
+                ModuleWindows = parsed.ModuleWindows,
+                ModuleLinux = parsed.ModuleLinux,
+                ModuleMacOS = parsed.ModuleMacOS,
+                Arguments = parsed.Arguments,
+                WorkingDirectory = parsed.WorkingDirectory,
                 Mode = parsed.Mode,
                 ThemeApiVersion = parsed.ThemeApiVersion,
                 InstallDirectory = string.Empty,
@@ -150,10 +182,14 @@ public sealed class AddonsManager
 
         try
         {
-            using (var archive = ZipFile.OpenRead(packagePath))
+            using var archive = ZipFile.OpenRead(packagePath);
+            var validationError = ValidatePackage(archive, kind);
+            if (!string.IsNullOrWhiteSpace(validationError))
             {
-                archive.ExtractToDirectory(tempRoot);
+                return AddonInstallResult.Failed(validationError);
             }
+
+            SafeExtractToDirectory(archive, tempRoot);
 
             var manifestPath = FindManifestPath(tempRoot, kind);
             if (manifestPath is null)
@@ -186,6 +222,11 @@ public sealed class AddonsManager
                 Kind = kind,
                 Type = manifest.Type,
                 Module = manifest.Module,
+                ModuleWindows = manifest.ModuleWindows,
+                ModuleLinux = manifest.ModuleLinux,
+                ModuleMacOS = manifest.ModuleMacOS,
+                Arguments = manifest.Arguments,
+                WorkingDirectory = manifest.WorkingDirectory,
                 Mode = manifest.Mode,
                 ThemeApiVersion = manifest.ThemeApiVersion,
                 InstallDirectory = dest,
@@ -238,6 +279,81 @@ public sealed class AddonsManager
         }
     }
 
+    private static string? ValidatePackage(ZipArchive archive, AddonKind kind)
+    {
+        if (archive is null)
+        {
+            return "Invalid package archive.";
+        }
+
+        var manifestFile = kind == AddonKind.Theme ? ThemeManifestFileName : ExtensionManifestFileName;
+        var hasManifest = archive.Entries.Any(e =>
+            !string.IsNullOrWhiteSpace(e.FullName) &&
+            string.Equals(Path.GetFileName(e.FullName), manifestFile, StringComparison.OrdinalIgnoreCase));
+
+        if (!hasManifest)
+        {
+            return $"Package is invalid: missing {manifestFile}.";
+        }
+
+        foreach (var entry in archive.Entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Name))
+            {
+                continue;
+            }
+
+            if (DisallowedPackageFiles.Contains(entry.Name))
+            {
+                return $"Package is invalid: includes disallowed dependency '{entry.Name}'.";
+            }
+        }
+
+        return null;
+    }
+
+    private static void SafeExtractToDirectory(ZipArchive archive, string destinationDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(destinationDirectory))
+        {
+            throw new ArgumentException("Destination directory is empty.", nameof(destinationDirectory));
+        }
+
+        Directory.CreateDirectory(destinationDirectory);
+
+        var destinationFullPath = Path.GetFullPath(destinationDirectory);
+        if (!destinationFullPath.EndsWith(Path.DirectorySeparatorChar))
+        {
+            destinationFullPath += Path.DirectorySeparatorChar;
+        }
+
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+
+        foreach (var entry in archive.Entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.FullName))
+            {
+                continue;
+            }
+
+            var relativePath = entry.FullName.Replace('/', Path.DirectorySeparatorChar);
+            var targetPath = Path.GetFullPath(Path.Combine(destinationDirectory, relativePath));
+            if (!targetPath.StartsWith(destinationFullPath, comparison))
+            {
+                throw new InvalidOperationException("Package contains an entry with an invalid path.");
+            }
+
+            if (string.IsNullOrWhiteSpace(entry.Name))
+            {
+                Directory.CreateDirectory(targetPath);
+                continue;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath) ?? destinationDirectory);
+            entry.ExtractToFile(targetPath, overwrite: true);
+        }
+    }
+
     private List<AddonManifest> EnumerateAddonManifests(AddonKind kind)
     {
         var result = new List<AddonManifest>();
@@ -269,6 +385,11 @@ public sealed class AddonsManager
                     Kind = kind,
                     Type = parsed.Type,
                     Module = parsed.Module,
+                    ModuleWindows = parsed.ModuleWindows,
+                    ModuleLinux = parsed.ModuleLinux,
+                    ModuleMacOS = parsed.ModuleMacOS,
+                    Arguments = parsed.Arguments,
+                    WorkingDirectory = parsed.WorkingDirectory,
                     Mode = parsed.Mode,
                     ThemeApiVersion = parsed.ThemeApiVersion,
                     InstallDirectory = item.Path,
@@ -323,6 +444,11 @@ public sealed class AddonsManager
         public Version Version { get; init; } = new Version(0, 0);
         public string Type { get; init; } = string.Empty;
         public string Module { get; init; } = string.Empty;
+        public string ModuleWindows { get; init; } = string.Empty;
+        public string ModuleLinux { get; init; } = string.Empty;
+        public string ModuleMacOS { get; init; } = string.Empty;
+        public string Arguments { get; init; } = string.Empty;
+        public string WorkingDirectory { get; init; } = string.Empty;
         public string Mode { get; init; } = string.Empty;
         public string ThemeApiVersion { get; init; } = string.Empty;
     }
@@ -340,6 +466,11 @@ public sealed class AddonsManager
         map.TryGetValue("Version", out var versionStr);
         map.TryGetValue("Type", out var type);
         map.TryGetValue("Module", out var module);
+        map.TryGetValue("ModuleWindows", out var moduleWindows);
+        map.TryGetValue("ModuleLinux", out var moduleLinux);
+        map.TryGetValue("ModuleMacOS", out var moduleMacOs);
+        map.TryGetValue("Arguments", out var arguments);
+        map.TryGetValue("WorkingDirectory", out var workingDirectory);
         map.TryGetValue("Mode", out var mode);
         map.TryGetValue("ThemeApiVersion", out var themeApi);
 
@@ -351,6 +482,11 @@ public sealed class AddonsManager
             Version = SimpleAddonYamlParser.ParseVersion(versionStr),
             Type = kind == AddonKind.Extension ? (type ?? string.Empty) : "Theme",
             Module = module ?? string.Empty,
+            ModuleWindows = moduleWindows ?? string.Empty,
+            ModuleLinux = moduleLinux ?? string.Empty,
+            ModuleMacOS = moduleMacOs ?? string.Empty,
+            Arguments = arguments ?? string.Empty,
+            WorkingDirectory = workingDirectory ?? string.Empty,
             Mode = mode ?? string.Empty,
             ThemeApiVersion = themeApi ?? string.Empty
         };

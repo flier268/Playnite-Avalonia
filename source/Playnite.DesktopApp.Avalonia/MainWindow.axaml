@@ -6,6 +6,10 @@
         Title="Playnite Desktop (Avalonia)"
         Width="1200"
         Height="760">
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+K" Command="{Binding OpenCommandPaletteCommand}" />
+    <KeyBinding Gesture="Ctrl+P" Command="{Binding OpenCommandPaletteCommand}" />
+  </Window.KeyBindings>
   <Window.DataTemplates>
     <DataTemplate DataType="{x:Type vm:LibraryViewModel}">
       <views:LibraryView />
@@ -24,7 +28,10 @@
     <Border Grid.Row="0" Grid.ColumnSpan="2" Background="{DynamicResource ShellHeaderBrush}" Padding="12">
       <DockPanel>
         <TextBlock Text="{Binding Title}" Foreground="{DynamicResource ShellTextBrush}" FontSize="18" DockPanel.Dock="Left" />
-        <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource ShellMutedTextBrush}" DockPanel.Dock="Right" />
+        <StackPanel Orientation="Horizontal" Spacing="10" DockPanel.Dock="Right">
+          <Button Content="Commands" Command="{Binding OpenCommandPaletteCommand}" />
+          <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource ShellMutedTextBrush}" VerticalAlignment="Center" />
+        </StackPanel>
       </DockPanel>
     </Border>
 

@@ -1,5 +1,6 @@
 using System;
 using Playnite.DesktopApp.Avalonia;
+using Playnite.Addons.OutOfProc;
 using Playnite.Configuration;
 using Playnite.Library;
 
@@ -11,6 +12,7 @@ public static class AppServices
     public static IGameLaunchService GameLaunchService { get; private set; }
     public static MainWindow MainWindow { get; private set; }
     public static ILibraryStore LibraryStore { get; private set; }
+    public static OutOfProcAddonsHost OutOfProcAddonsHost { get; private set; }
     public static event EventHandler SettingsChanged;
     public static event EventHandler LibraryStoreChanged;
     public static event EventHandler AddonsChanged;
@@ -26,6 +28,11 @@ public static class AppServices
         LibraryStore = libraryStore;
         LibraryStoreChanged?.Invoke(null, EventArgs.Empty);
         GameLaunchService = gameLaunchService;
+    }
+
+    public static void InitializeOutOfProcAddonsHost(OutOfProcAddonsHost host)
+    {
+        OutOfProcAddonsHost = host;
     }
 
     public static void InitializeLibraryStore(ILibraryStore libraryStore)

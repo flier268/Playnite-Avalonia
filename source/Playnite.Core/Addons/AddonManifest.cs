@@ -13,6 +13,11 @@ public sealed class AddonManifest
 
     public string Type { get; init; } = string.Empty;
     public string Module { get; init; } = string.Empty;
+    public string ModuleWindows { get; init; } = string.Empty;
+    public string ModuleLinux { get; init; } = string.Empty;
+    public string ModuleMacOS { get; init; } = string.Empty;
+    public string Arguments { get; init; } = string.Empty;
+    public string WorkingDirectory { get; init; } = string.Empty;
 
     public string Mode { get; init; } = string.Empty;
     public string ThemeApiVersion { get; init; } = string.Empty;
@@ -20,4 +25,3 @@ public sealed class AddonManifest
     public string InstallDirectory { get; init; } = string.Empty;
     public bool IsUserInstall { get; init; }
 }
-

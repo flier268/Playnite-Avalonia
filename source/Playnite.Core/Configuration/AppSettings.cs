@@ -65,5 +65,12 @@ namespace Playnite.Configuration
 
         public List<string> DisabledAddons { get; set; } = new List<string>();
         public string AddonsBrowsePath { get; set; } = string.Empty;
+
+        public int OutOfProcAddonRequestTimeoutMs { get; set; } = 5000;
+        public int OutOfProcAddonRestartLimitPerMinute { get; set; } = 3;
+        public int OutOfProcAddonStderrTailLines { get; set; } = 50;
+
+        public List<string> CommandPaletteRecent { get; set; } = new List<string>();
+        public List<string> CommandPalettePinned { get; set; } = new List<string>();
     }
 }

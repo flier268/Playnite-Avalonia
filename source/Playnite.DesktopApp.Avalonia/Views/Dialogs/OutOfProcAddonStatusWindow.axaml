@@ -1,0 +1,39 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Playnite.DesktopApp.Avalonia.Views.Dialogs.OutOfProcAddonStatusWindow"
+        Width="820"
+        Height="560"
+        MinWidth="560"
+        MinHeight="360"
+        Background="{DynamicResource ShellContentBrush}"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+    <TextBlock Text="{Binding Title}"
+               FontSize="18"
+               FontWeight="SemiBold"
+               Foreground="{DynamicResource ShellTextBrush}"
+               Margin="0,0,0,12" />
+
+    <Border Grid.Row="1"
+            Background="{DynamicResource ShellCardBrush}"
+            BorderBrush="{DynamicResource ShellItemBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="6"
+            Padding="8"
+            Margin="0,0,0,12">
+      <TextBox Text="{Binding DetailsText}"
+               IsReadOnly="True"
+               AcceptsReturn="True"
+               TextWrapping="NoWrap"
+               ScrollViewer.VerticalScrollBarVisibility="Auto"
+               ScrollViewer.HorizontalScrollBarVisibility="Auto"
+               Background="Transparent"
+               BorderThickness="0" />
+    </Border>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Close" Click="OnCloseClick" IsDefault="True" />
+    </StackPanel>
+  </Grid>
+</Window>

@@ -11,6 +11,7 @@
 - Cross-platform hardening: Windows-only calls are isolated/guarded and Linux/macOS runs are unblocked. [in progress]
   - No reflection usage in Avalonia build graph (avoid `System.Reflection`/dynamic loading). [done]
   - Script actions don't require PowerShell on non-Windows (fallback to `sh`). [done]
+  - Add-on package install uses zip-slip-safe extraction and rejects bundled host assemblies. [done]
 - Legacy WPF source tree retired/removed after parity is reached. [pending]
 
 ## Milestones
@@ -20,6 +21,15 @@
 4. Desktop Avalonia parity (Library/Details/Settings/Add-ons). [in progress]
 5. Fullscreen Avalonia parity (Library/Details/Settings). [in progress]
 6. Add-ons / extensions management (install/update/remove; themes). [pending]
+   - NativeAOT-compatible extensions: prefer out-of-proc add-ons (IPC) over in-proc DLL loading. [pending]
+   - Define stdio JSON protocol + host wrapper; add sample out-of-proc add-on. [in progress]
+   - Out-of-proc manifest keys (extension.yaml): `Mode: OutOfProc`, `Module` (or `ModuleWindows`/`ModuleLinux`/`ModuleMacOS`), optional `Arguments`, optional `WorkingDirectory`. [in progress]
+   - Host lifecycle: stderr tail capture, restart throttling, request timeout, and status surfaced in Add-ons UI (restart/copy/view). [in progress]
+   - GenericPlugin (out-of-proc): command palette (Ctrl+K/Ctrl+P + header button) backed by `generic.getCommands`/`generic.runCommand`. [in progress]
+   - Command palette includes built-in navigation commands (Library/Add-ons/Settings/Reload). [in progress]
+   - Command palette includes built-in navigation to sub-sections and basic library operations. [in progress]
+   - Command palette includes current-game actions (Play/Open Details/Toggle favorite/Toggle hidden/Download metadata). [done]
+   - Command palette supports pinning and recent history (persisted in settings). [done]
 7. Tools parity (Installer/Utilities/Toolbox + templates). [in progress]
 8. Cross-platform hardening pass (Windows-only isolation; path/process/script handling). [pending]
 9. Retire legacy WPF source tree (delete or move to archive branch). [pending]

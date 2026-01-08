@@ -1,10 +1,13 @@
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Playnite.Configuration;
 using Playnite.SDK;
 using Playnite.SDK.Models;
 using Playnite.DesktopApp.Avalonia.Services;
+using Playnite.DesktopApp.Avalonia.ViewModels.Dialogs;
+using Playnite.DesktopApp.Avalonia.Views.Dialogs;
 
 namespace Playnite.DesktopApp.Avalonia.ViewModels;
 
@@ -39,6 +42,7 @@ public sealed class DesktopShellViewModel : INotifyPropertyChanged, IDesktopNavi
     public ICommand ShowLibraryCommand { get; }
     public ICommand ShowSettingsCommand { get; }
     public ICommand ShowAddonsCommand { get; }
+    public ICommand OpenCommandPaletteCommand { get; }
 
     public object CurrentView
     {
@@ -62,6 +66,7 @@ public sealed class DesktopShellViewModel : INotifyPropertyChanged, IDesktopNavi
         ShowLibraryCommand = new RelayCommand(() => ShowLibrary());
         ShowAddonsCommand = new RelayCommand(() => ShowAddons());
         ShowSettingsCommand = new RelayCommand(() => ShowSettings());
+        OpenCommandPaletteCommand = new RelayCommand(() => TaskUtilities.FireAndForget(OpenCommandPaletteAsync()));
         libraryViewModel = new LibraryViewModel(this);
         gameDetailsViewModel = new GameDetailsViewModel(this);
         addonsViewModel = new AddonsViewModel();
@@ -96,15 +101,169 @@ public sealed class DesktopShellViewModel : INotifyPropertyChanged, IDesktopNavi
         CurrentView = gameDetailsViewModel;
     }
 
-    private void ShowSettings()
+    public Game? GetCurrentGame()
+    {
+        if (CurrentView == gameDetailsViewModel && gameDetailsViewModel.Game != null)
+        {
+            return gameDetailsViewModel.Game;
+        }
+
+        return libraryViewModel.SelectedGame;
+    }
+
+    public void ShowSettings()
     {
         StatusText = "Settings";
         CurrentView = settingsViewModel;
     }
 
-    private void ShowAddons()
+    public void ShowAddons()
     {
         StatusText = "Add-ons";
         CurrentView = addonsViewModel;
+    }
+
+    public void ShowAddonsSection(string sectionName)
+    {
+        ShowAddons();
+        if (string.IsNullOrWhiteSpace(sectionName))
+        {
+            return;
+        }
+
+        var section = addonsViewModel.Sections.FirstOrDefault(a => string.Equals(a.Name, sectionName, System.StringComparison.OrdinalIgnoreCase));
+        if (section != null)
+        {
+            addonsViewModel.SelectedSection = section;
+        }
+    }
+
+    public void ShowSettingsSection(string sectionName)
+    {
+        ShowSettings();
+        if (string.IsNullOrWhiteSpace(sectionName))
+        {
+            return;
+        }
+
+        var section = settingsViewModel.Sections.FirstOrDefault(a => string.Equals(a.Name, sectionName, System.StringComparison.OrdinalIgnoreCase));
+        if (section != null)
+        {
+            settingsViewModel.SelectedSection = section;
+        }
+    }
+
+    public void RescanAllInstallSizes()
+    {
+        libraryViewModel.RescanAllInstallSizesCommand.Execute(null);
+        StatusText = "Rescanning all install sizes...";
+        CurrentView = libraryViewModel;
+    }
+
+    public void DownloadMissingMetadataForFiltered()
+    {
+        libraryViewModel.DownloadMissingMetadataForFilteredCommand.Execute(null);
+        StatusText = "Downloading missing metadata for filtered...";
+        CurrentView = libraryViewModel;
+    }
+
+    public void PlayCurrentGame()
+    {
+        var game = GetCurrentGame();
+        if (game == null)
+        {
+            StatusText = "No game selected.";
+            return;
+        }
+
+        libraryViewModel.PlayCommand.Execute(game);
+        StatusText = $"Play: {game.Name}";
+    }
+
+    public void OpenCurrentGameDetails()
+    {
+        var game = GetCurrentGame();
+        if (game == null)
+        {
+            StatusText = "No game selected.";
+            return;
+        }
+
+        ShowGameDetails(game);
+    }
+
+    public void ToggleCurrentGameFavorite()
+    {
+        var game = GetCurrentGame();
+        if (game == null)
+        {
+            StatusText = "No game selected.";
+            return;
+        }
+
+        libraryViewModel.ToggleFavoriteCommand.Execute(game);
+        StatusText = $"Toggled favorite: {game.Name}";
+    }
+
+    public void ToggleCurrentGameHidden()
+    {
+        var game = GetCurrentGame();
+        if (game == null)
+        {
+            StatusText = "No game selected.";
+            return;
+        }
+
+        libraryViewModel.ToggleHiddenCommand.Execute(game);
+        StatusText = $"Toggled hidden: {game.Name}";
+    }
+
+    public void DownloadMetadataForCurrentGame(bool overwriteExisting)
+    {
+        var game = GetCurrentGame();
+        if (game == null)
+        {
+            StatusText = "No game selected.";
+            return;
+        }
+
+        if (overwriteExisting)
+        {
+            libraryViewModel.DownloadMetadataCommand.Execute(game);
+            StatusText = $"Download metadata: {game.Name}";
+        }
+        else
+        {
+            libraryViewModel.DownloadMissingMetadataCommand.Execute(game);
+            StatusText = $"Download missing metadata: {game.Name}";
+        }
+    }
+
+    public void ReloadLibrary()
+    {
+        libraryViewModel.Reload();
+        StatusText = "Library reloaded";
+        CurrentView = libraryViewModel;
+    }
+
+    private async System.Threading.Tasks.Task OpenCommandPaletteAsync()
+    {
+        if (AppServices.MainWindow == null)
+        {
+            return;
+        }
+
+        var window = new CommandPaletteWindow
+        {
+            DataContext = new CommandPaletteViewModel(this)
+        };
+
+        try
+        {
+            await window.ShowDialog(AppServices.MainWindow);
+        }
+        catch
+        {
+        }
     }
 }

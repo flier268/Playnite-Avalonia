@@ -20,6 +20,10 @@
           <Button Content="Install from file" Command="{Binding InstallFromFileCommand}" />
           <Button Content="Refresh" Command="{Binding RefreshCommand}" />
           <Button Content="Enable/Disable selected" Command="{Binding ToggleEnabledCommand}" />
+          <Button Content="Restart (OutOfProc)" Command="{Binding RestartOutOfProcCommand}" IsEnabled="{Binding CanManageOutOfProc}" />
+          <Button Content="View log (OutOfProc)" Command="{Binding ViewOutOfProcLogCommand}" IsEnabled="{Binding CanManageOutOfProc}" />
+          <Button Content="Copy status (OutOfProc)" Command="{Binding CopyOutOfProcStatusCommand}" IsEnabled="{Binding CanManageOutOfProc}" />
+          <Button Content="Commands (OutOfProc)" Command="{Binding ViewOutOfProcCommandsCommand}" IsEnabled="{Binding CanManageOutOfProc}" />
           <Button Content="Uninstall selected" Command="{Binding UninstallCommand}" />
         </StackPanel>
 
@@ -33,6 +37,10 @@
                   <TextBlock Text="{Binding Manifest.Version, StringFormat=Version: {0}}" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
                   <TextBlock Text="{Binding Manifest.Id, StringFormat=Id: {0}}" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
                   <TextBlock Text="{Binding Disabled, StringFormat=Disabled: {0}}" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+                  <TextBlock Text="{Binding OutOfProcStatusText}"
+                             Foreground="{DynamicResource ShellMutedTextBrush}"
+                             FontSize="12"
+                             IsVisible="{Binding OutOfProcStatusText, Converter={StaticResource StringNotEmptyConverter}}" />
                 </StackPanel>
               </Border>
             </DataTemplate>

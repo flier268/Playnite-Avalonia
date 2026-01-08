@@ -3,6 +3,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Controls;
 using Playnite.Configuration;
+using Playnite.Addons;
+using Playnite.Addons.OutOfProc;
 using Playnite.Library;
 using Playnite.FullscreenApp.Avalonia.ViewModels;
 using Playnite.FullscreenApp.Avalonia.Services;
@@ -14,6 +16,8 @@ namespace Playnite.FullscreenApp.Avalonia
 {
     public sealed partial class App : Application
     {
+        private OutOfProcAddonsHost outOfProcAddonsHost;
+
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
@@ -29,6 +33,23 @@ namespace Playnite.FullscreenApp.Avalonia
                 CultureService.Apply(settings.Language);
                 var store = LibraryStoreFactory.Create(settings);
                 MetadataProviderRegistry.Default.Register(new LocalFilesMetadataProvider());
+
+                try
+                {
+                    outOfProcAddonsHost = new OutOfProcAddonsHost(
+                        AddonsManager.CreateDefault(),
+                        new OutOfProcAddonsHostOptions
+                        {
+                            RequestTimeoutMs = settings.OutOfProcAddonRequestTimeoutMs,
+                            RestartLimitPerMinute = settings.OutOfProcAddonRestartLimitPerMinute,
+                            StderrTailLines = settings.OutOfProcAddonStderrTailLines
+                        });
+                    outOfProcAddonsHost.StartAllEnabled(settings);
+                    desktop.Exit += (_, _) => outOfProcAddonsHost?.Dispose();
+                }
+                catch
+                {
+                }
 
                 var window = new MainWindow
                 {
