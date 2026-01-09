@@ -17,6 +17,13 @@ public sealed class AddonsInstalledExtensionsViewModel : INotifyPropertyChanged
     private readonly AddonsManager manager = AddonsManager.CreateDefault();
     private AddonListItem? selectedAddon;
     private string status = string.Empty;
+    private readonly RelayCommand uninstallCommand;
+    private readonly RelayCommand toggleEnabledCommand;
+    private readonly RelayCommand restartOutOfProcCommand;
+    private readonly RelayCommand copyOutOfProcStatusCommand;
+    private readonly RelayCommand viewOutOfProcLogCommand;
+    private readonly RelayCommand viewOutOfProcCommandsCommand;
+    private readonly RelayCommand reinstallSelectedFromFileCommand;
 
     public AddonsInstalledExtensionsViewModel()
     {
@@ -24,12 +31,27 @@ public sealed class AddonsInstalledExtensionsViewModel : INotifyPropertyChanged
 
         RefreshCommand = new RelayCommand(Refresh);
         InstallFromFileCommand = new RelayCommand(() => TaskUtilities.FireAndForget(InstallFromFileAsync()));
-        UninstallCommand = new RelayCommand(UninstallSelected);
-        ToggleEnabledCommand = new RelayCommand(ToggleEnabledSelected);
-        RestartOutOfProcCommand = new RelayCommand(RestartSelectedOutOfProc);
-        CopyOutOfProcStatusCommand = new RelayCommand(() => TaskUtilities.FireAndForget(CopySelectedOutOfProcStatusAsync()));
-        ViewOutOfProcLogCommand = new RelayCommand(() => TaskUtilities.FireAndForget(ViewSelectedOutOfProcLogAsync()));
-        ViewOutOfProcCommandsCommand = new RelayCommand(() => TaskUtilities.FireAndForget(ViewSelectedOutOfProcCommandsAsync()));
+
+        reinstallSelectedFromFileCommand = new RelayCommand(() => TaskUtilities.FireAndForget(ReinstallSelectedFromFileAsync()), () => SelectedAddon?.Manifest != null);
+        ReinstallSelectedFromFileCommand = reinstallSelectedFromFileCommand;
+
+        uninstallCommand = new RelayCommand(UninstallSelected, () => CanUninstall);
+        UninstallCommand = uninstallCommand;
+
+        toggleEnabledCommand = new RelayCommand(ToggleEnabledSelected, () => CanToggleEnabled);
+        ToggleEnabledCommand = toggleEnabledCommand;
+
+        restartOutOfProcCommand = new RelayCommand(RestartSelectedOutOfProc, () => CanManageOutOfProc);
+        RestartOutOfProcCommand = restartOutOfProcCommand;
+
+        copyOutOfProcStatusCommand = new RelayCommand(() => TaskUtilities.FireAndForget(CopySelectedOutOfProcStatusAsync()), () => CanManageOutOfProc);
+        CopyOutOfProcStatusCommand = copyOutOfProcStatusCommand;
+
+        viewOutOfProcLogCommand = new RelayCommand(() => TaskUtilities.FireAndForget(ViewSelectedOutOfProcLogAsync()), () => CanManageOutOfProc);
+        ViewOutOfProcLogCommand = viewOutOfProcLogCommand;
+
+        viewOutOfProcCommandsCommand = new RelayCommand(() => TaskUtilities.FireAndForget(ViewSelectedOutOfProcCommandsAsync()), () => CanManageOutOfProc);
+        ViewOutOfProcCommandsCommand = viewOutOfProcCommandsCommand;
 
         AppServices.AddonsChanged += (_, _) => Refresh();
 
@@ -56,6 +78,14 @@ public sealed class AddonsInstalledExtensionsViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(CanToggleEnabled));
             OnPropertyChanged(nameof(CanUninstall));
             OnPropertyChanged(nameof(CanManageOutOfProc));
+
+            reinstallSelectedFromFileCommand.RaiseCanExecuteChanged();
+            uninstallCommand.RaiseCanExecuteChanged();
+            toggleEnabledCommand.RaiseCanExecuteChanged();
+            restartOutOfProcCommand.RaiseCanExecuteChanged();
+            copyOutOfProcStatusCommand.RaiseCanExecuteChanged();
+            viewOutOfProcLogCommand.RaiseCanExecuteChanged();
+            viewOutOfProcCommandsCommand.RaiseCanExecuteChanged();
         }
     }
 
@@ -76,6 +106,7 @@ public sealed class AddonsInstalledExtensionsViewModel : INotifyPropertyChanged
 
     public ICommand RefreshCommand { get; }
     public ICommand InstallFromFileCommand { get; }
+    public ICommand ReinstallSelectedFromFileCommand { get; }
     public ICommand UninstallCommand { get; }
     public ICommand ToggleEnabledCommand { get; }
     public ICommand RestartOutOfProcCommand { get; }
@@ -125,6 +156,44 @@ public sealed class AddonsInstalledExtensionsViewModel : INotifyPropertyChanged
         var path = await FilePickerService.PickPackageFileAsync();
         if (string.IsNullOrWhiteSpace(path))
         {
+            return;
+        }
+
+        var result = manager.InstallFromPackage(path);
+        Status = result.Success ? $"Installed: {result.Manifest?.Name ?? result.Manifest?.Id}" : result.ErrorMessage;
+        AppServices.NotifyAddonsChanged();
+        Refresh();
+    }
+
+    private async System.Threading.Tasks.Task ReinstallSelectedFromFileAsync()
+    {
+        if (SelectedAddon?.Manifest == null)
+        {
+            return;
+        }
+
+        var selectedId = SelectedAddon.Manifest.Id ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(selectedId))
+        {
+            return;
+        }
+
+        var path = await FilePickerService.PickPackageFileAsync();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        var packageManifest = manager.TryReadPackageManifest(path);
+        if (packageManifest == null || string.IsNullOrWhiteSpace(packageManifest.Id))
+        {
+            Status = "Invalid package (missing manifest).";
+            return;
+        }
+
+        if (!string.Equals(packageManifest.Id, selectedId, StringComparison.OrdinalIgnoreCase))
+        {
+            Status = $"Selected extension id '{selectedId}' doesn't match package id '{packageManifest.Id}'.";
             return;
         }
 

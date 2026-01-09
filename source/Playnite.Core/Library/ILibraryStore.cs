@@ -10,6 +10,9 @@ public interface ILibraryStore
     IReadOnlyList<LibraryIdName> LoadPlatforms();
     IReadOnlyList<LibraryIdName> LoadGenres();
     IReadOnlyList<Emulator> LoadEmulators();
+    IReadOnlyList<FilterPreset> LoadFilterPresets();
+    bool TrySaveFilterPresets(IReadOnlyList<FilterPreset> presets);
+    bool TryUpsertGames(IReadOnlyList<Game> games);
 
     bool TryUpdateGameInstallation(Game game);
     bool TryUpdateGameActions(Game game);

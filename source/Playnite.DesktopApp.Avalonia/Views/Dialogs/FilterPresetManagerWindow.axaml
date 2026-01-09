@@ -1,0 +1,62 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Playnite.DesktopApp.Avalonia.Views.Dialogs.FilterPresetManagerWindow"
+        Width="720"
+        Height="420"
+        Title="Manage Filter Presets"
+        WindowStartupLocation="CenterOwner">
+  <Grid RowDefinitions="*,Auto" ColumnDefinitions="260,*" Margin="12">
+    <Border Background="{DynamicResource ShellCardBrush}" Padding="10" CornerRadius="6" Margin="0,0,12,10">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Presets" FontWeight="Bold" Foreground="{DynamicResource ShellTextBrush}" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Button Content="Add" Command="{Binding AddCommand}" />
+          <Button Content="Remove" Command="{Binding RemoveCommand}" />
+          <Button Content="Up" Command="{Binding MoveUpCommand}" />
+          <Button Content="Down" Command="{Binding MoveDownCommand}" />
+        </StackPanel>
+        <ListBox ItemsSource="{Binding Presets}"
+                 SelectedItem="{Binding SelectedPreset}"
+                 BorderThickness="1"
+                 BorderBrush="{DynamicResource ShellDividerBrush}"
+                 Background="{DynamicResource ShellContentBrush}">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Name}" Foreground="{DynamicResource ShellTextBrush}" />
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Column="1" Background="{DynamicResource ShellCardBrush}" Padding="10" CornerRadius="6" Margin="0,0,0,10">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Details" FontWeight="Bold" Foreground="{DynamicResource ShellTextBrush}" />
+        <StackPanel Spacing="6">
+          <TextBlock Text="Name" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+          <TextBox Text="{Binding SelectedPreset.Name}" />
+          <CheckBox Content="Show in quick presets"
+                    IsChecked="{Binding SelectedPreset.ShowInQuickSelection}" />
+          <TextBlock Text="Criteria (subset)" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" Margin="0,8,0,0" />
+          <TextBlock Text="Search" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+          <TextBox Text="{Binding SelectedPreset.SearchText}" />
+          <CheckBox Content="Installed only" IsChecked="{Binding SelectedPreset.InstalledOnly}" />
+          <CheckBox Content="Favorites only" IsChecked="{Binding SelectedPreset.FavoritesOnly}" />
+          <CheckBox Content="Include hidden" IsChecked="{Binding SelectedPreset.IncludeHidden}" />
+          <TextBlock Text="Platform" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+          <ComboBox ItemsSource="{Binding PlatformOptions}" SelectedItem="{Binding SelectedPlatformOption}" />
+          <TextBlock Text="Genre" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+          <ComboBox ItemsSource="{Binding GenreOptions}" SelectedItem="{Binding SelectedGenreOption}" />
+          <TextBlock Text="{Binding SelectedPreset.Id, StringFormat=Id: {0}}"
+                     Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        </StackPanel>
+        <TextBlock Text="{Binding Status}" Foreground="IndianRed" TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+
+    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Save" Click="OnSaveClick" />
+      <Button Content="Cancel" Click="OnCancelClick" />
+    </StackPanel>
+  </Grid>
+</Window>

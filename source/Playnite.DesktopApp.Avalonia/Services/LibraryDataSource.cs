@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using Playnite.Library;
 using Playnite.SDK.Models;
 
@@ -10,6 +11,7 @@ public interface ILibraryDataSource
     ObservableCollection<Game> LoadGames();
     IReadOnlyList<LibraryIdName> LoadPlatforms();
     IReadOnlyList<LibraryIdName> LoadGenres();
+    IReadOnlyList<FilterPreset> LoadFilterPresets();
 }
 
 public static class LibraryDataSourceFactory
@@ -22,7 +24,8 @@ public static class LibraryDataSourceFactory
             return new CoreLibraryDataSource(store);
         }
 
-        return new MockLibraryDataSource();
+        var useMock = string.Equals(Environment.GetEnvironmentVariable("PLAYNITE_USE_MOCK_LIBRARY"), "1", StringComparison.OrdinalIgnoreCase);
+        return useMock ? new MockLibraryDataSource() : new EmptyLibraryDataSource();
     }
 }
 
@@ -48,6 +51,34 @@ public sealed class CoreLibraryDataSource : ILibraryDataSource
     public ObservableCollection<Game> LoadGames()
     {
         return new ObservableCollection<Game>(store.LoadGames());
+    }
+
+    public IReadOnlyList<FilterPreset> LoadFilterPresets()
+    {
+        return store.LoadFilterPresets();
+    }
+}
+
+public sealed class EmptyLibraryDataSource : ILibraryDataSource
+{
+    public ObservableCollection<Game> LoadGames()
+    {
+        return new ObservableCollection<Game>();
+    }
+
+    public IReadOnlyList<LibraryIdName> LoadPlatforms()
+    {
+        return Array.Empty<LibraryIdName>();
+    }
+
+    public IReadOnlyList<LibraryIdName> LoadGenres()
+    {
+        return Array.Empty<LibraryIdName>();
+    }
+
+    public IReadOnlyList<FilterPreset> LoadFilterPresets()
+    {
+        return Array.Empty<FilterPreset>();
     }
 }
 
@@ -92,5 +123,10 @@ public sealed class MockLibraryDataSource : ILibraryDataSource
     public IReadOnlyList<LibraryIdName> LoadGenres()
     {
         return Array.Empty<LibraryIdName>();
+    }
+
+    public IReadOnlyList<FilterPreset> LoadFilterPresets()
+    {
+        return Array.Empty<FilterPreset>();
     }
 }

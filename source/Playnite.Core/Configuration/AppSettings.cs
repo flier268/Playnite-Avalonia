@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 
 namespace Playnite.Configuration
 {
@@ -33,6 +34,11 @@ namespace Playnite.Configuration
     public sealed class AppSettings
     {
         public string LibraryDbPath { get; set; } = string.Empty;
+
+        public string SteamPath { get; set; } = string.Empty;
+        public string EpicManifestsPath { get; set; } = string.Empty;
+
+        public Guid SelectedLibraryFilterPresetId { get; set; } = Guid.Empty;
 
         public AppTheme Theme { get; set; } = AppTheme.Default;
 

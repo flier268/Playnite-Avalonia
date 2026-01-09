@@ -17,6 +17,7 @@ public sealed class AddonsBrowseViewModel : INotifyPropertyChanged
     private string browsePath = string.Empty;
     private AddonPackageItem? selectedPackage;
     private string status = string.Empty;
+    private readonly RelayCommand installSelectedCommand;
 
     public AddonsBrowseViewModel()
     {
@@ -24,7 +25,8 @@ public sealed class AddonsBrowseViewModel : INotifyPropertyChanged
 
         ChooseFolderCommand = new RelayCommand(() => TaskUtilities.FireAndForget(ChooseFolderAsync()));
         RefreshCommand = new RelayCommand(Refresh);
-        InstallSelectedCommand = new RelayCommand(InstallSelected);
+        installSelectedCommand = new RelayCommand(InstallSelected, () => SelectedPackage != null);
+        InstallSelectedCommand = installSelectedCommand;
 
         var settings = AppServices.LoadSettings();
         browsePath = settings.AddonsBrowsePath ?? string.Empty;
@@ -52,6 +54,7 @@ public sealed class AddonsBrowseViewModel : INotifyPropertyChanged
 
             selectedPackage = value;
             OnPropertyChanged();
+            installSelectedCommand.RaiseCanExecuteChanged();
         }
     }
 
@@ -191,4 +194,3 @@ public sealed class AddonPackageItem
     public bool IsInstalled { get; }
     public override string ToString() => $"{Manifest?.Name ?? string.Empty} ({Manifest?.Id ?? string.Empty})";
 }
-

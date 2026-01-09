@@ -45,6 +45,9 @@
             <MenuItem Header="Install/Uninstall"
                       Command="{Binding DataContext.InstallCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                       CommandParameter="{Binding Game}" />
+            <MenuItem Header="Open install directory"
+                      Command="{Binding DataContext.OpenInstallDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding Game}" />
             <MenuItem Header="Rescan install size"
                       Command="{Binding DataContext.RescanInstallSizeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                       CommandParameter="{Binding Game}" />
@@ -75,6 +78,12 @@
       <Setter Property="Padding" Value="0" />
       <Setter Property="Background" Value="Transparent" />
     </Style>
+    <Style Selector="ListBox#QuickPresets ListBoxItem">
+      <Setter Property="Padding" Value="6,4" />
+    </Style>
+    <Style Selector="ListBox#QuickPresets ListBoxItem:selected">
+      <Setter Property="Background" Value="{DynamicResource ShellItemSelectedBrush}" />
+    </Style>
     <Style Selector="ListBoxItem:pointerover Border#ItemCard">
       <Setter Property="Background" Value="{DynamicResource ShellItemHoverBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource ShellDividerBrush}" />
@@ -84,13 +93,29 @@
       <Setter Property="BorderBrush" Value="{DynamicResource ShellAccentBrush}" />
     </Style>
   </UserControl.Styles>
-  <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="220,*" Background="{DynamicResource ShellContentBrush}">
+  <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="220,*" Background="{DynamicResource ShellContentBrush}">
     <TextBlock Text="{Binding Header}" Foreground="{DynamicResource ShellTextBrush}" FontSize="22" Grid.ColumnSpan="2" />
     <TextBlock Text="{Binding Description}" Foreground="{DynamicResource ShellMutedTextBrush}" TextWrapping="Wrap" Grid.Row="1" Grid.ColumnSpan="2" />
 
     <Border Grid.Row="2" Grid.Column="0" Margin="0,12,8,0" Background="{DynamicResource ShellCardBrush}" Padding="12" CornerRadius="6">
       <StackPanel Spacing="10">
         <TextBlock Text="Filters" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <TextBlock Text="Quick presets" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        <ListBox Name="QuickPresets"
+                 ItemsSource="{Binding QuickPresetOptions}"
+                 SelectedItem="{Binding SelectedPreset}"
+                 Background="{DynamicResource ShellContentBrush}"
+                 BorderThickness="0"
+                 MaxHeight="140">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Name}" Foreground="{DynamicResource ShellTextBrush}" />
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Text="Preset" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
+        <ComboBox ItemsSource="{Binding PresetOptions}" SelectedItem="{Binding SelectedPreset}" />
+        <Button Content="Manage presets" Command="{Binding ManagePresetsCommand}" />
         <TextBlock Text="Search" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
         <TextBox Text="{Binding FilterText}" Watermark="Type to filter..." />
         <CheckBox Content="Installed only" IsChecked="{Binding ShowInstalledOnly}" />
@@ -115,6 +140,9 @@
         <TextBlock Text="Games" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
         <StackPanel Orientation="Horizontal" Spacing="8">
           <Button Content="Rescan install sizes" Command="{Binding RescanAllInstallSizesCommand}" />
+          <Button Content="Update library" Command="{Binding UpdateLibraryCommand}" />
+          <Button Content="Import Steam" Command="{Binding ImportSteamCommand}" />
+          <Button Content="Import Epic" Command="{Binding ImportEpicCommand}" />
           <ComboBox ItemsSource="{Binding MetadataProviders}" SelectedItem="{Binding SelectedMetadataProvider}" MinWidth="220" />
           <Button Content="Download missing metadata" Command="{Binding DownloadMissingMetadataForFilteredCommand}" />
           <Button Content="Reload" Command="{Binding ReloadCommand}" />
@@ -169,6 +197,9 @@
                     <MenuItem Header="Install/Uninstall"
                               Command="{Binding DataContext.InstallCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                               CommandParameter="{Binding Game}" />
+                    <MenuItem Header="Open install directory"
+                              Command="{Binding DataContext.OpenInstallDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding Game}" />
                     <MenuItem Header="Rescan install size"
                               Command="{Binding DataContext.RescanInstallSizeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                               CommandParameter="{Binding Game}" />
@@ -196,6 +227,11 @@
           </ListBox.ItemTemplate>
         </ListBox>
       </StackPanel>
+    </Border>
+
+    <!-- Status bar -->
+    <Border Grid.Row="3" Grid.ColumnSpan="2" Background="{DynamicResource ShellNavBrush}" BorderBrush="{DynamicResource ShellDividerBrush}" BorderThickness="0,1,0,0" Padding="8,4">
+      <TextBlock Text="{Binding LastAction}" Foreground="{DynamicResource ShellMutedTextBrush}" FontSize="12" />
     </Border>
   </Grid>
 </UserControl>

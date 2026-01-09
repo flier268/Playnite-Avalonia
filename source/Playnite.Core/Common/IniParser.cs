@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Playnite.Common
 {
@@ -21,13 +19,32 @@ namespace Playnite.Common
 
             set
             {
-                new NotImplementedException();
+                if (string.IsNullOrEmpty(itemName))
+                {
+                    throw new ArgumentNullException(nameof(itemName));
+                }
+
+                var index = Items.FindIndex(a => a.Name == itemName);
+                var item = new IniItem(itemName, value);
+
+                if (index >= 0)
+                {
+                    Items[index] = item;
+                }
+                else
+                {
+                    Items.Add(item);
+                }
             }
         }
 
         public IniSection(string name)
         {
-            if (string.IsNullOrEmpty(name)) new ArgumentNullException(nameof(name));
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
             Name = name;
         }
 
@@ -44,9 +61,13 @@ namespace Playnite.Common
 
         public IniItem(string name, string value)
         {
-            if (string.IsNullOrEmpty(name)) new ArgumentNullException(nameof(name));
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
             Name = name;
-            Value = value;
+            Value = value ?? string.Empty;
         }
 
         public override string ToString()
@@ -68,7 +89,31 @@ namespace Playnite.Common
 
             set
             {
-                new NotImplementedException();
+                if (string.IsNullOrEmpty(sectionName))
+                {
+                    throw new ArgumentNullException(nameof(sectionName));
+                }
+
+                if (value == null)
+                {
+                    Sections.RemoveAll(a => string.Equals(a.Name, sectionName, StringComparison.OrdinalIgnoreCase));
+                    return;
+                }
+
+                if (!string.Equals(value.Name, sectionName, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new ArgumentException($"Section name '{value.Name}' doesn't match indexer name '{sectionName}'.", nameof(value));
+                }
+
+                var index = Sections.FindIndex(a => string.Equals(a.Name, sectionName, StringComparison.OrdinalIgnoreCase));
+                if (index >= 0)
+                {
+                    Sections[index] = value;
+                }
+                else
+                {
+                    Sections.Add(value);
+                }
             }
         }
     }
@@ -79,7 +124,7 @@ namespace Playnite.Common
         {            
             if (iniString?.Any() != true)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(iniString));
             }
 
             var data = new IniData();

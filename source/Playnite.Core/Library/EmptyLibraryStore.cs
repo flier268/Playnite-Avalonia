@@ -11,6 +11,9 @@ public sealed class EmptyLibraryStore : ILibraryStore
     public IReadOnlyList<LibraryIdName> LoadPlatforms() => Array.Empty<LibraryIdName>();
     public IReadOnlyList<LibraryIdName> LoadGenres() => Array.Empty<LibraryIdName>();
     public IReadOnlyList<Emulator> LoadEmulators() => Array.Empty<Emulator>();
+    public IReadOnlyList<FilterPreset> LoadFilterPresets() => Array.Empty<FilterPreset>();
+    public bool TrySaveFilterPresets(IReadOnlyList<FilterPreset> presets) => false;
+    public bool TryUpsertGames(IReadOnlyList<Game> games) => false;
     public bool TryUpdateGameInstallation(Game game) => false;
     public bool TryUpdateGameActions(Game game) => false;
     public bool TryUpdateGameUserFlags(Game game) => false;

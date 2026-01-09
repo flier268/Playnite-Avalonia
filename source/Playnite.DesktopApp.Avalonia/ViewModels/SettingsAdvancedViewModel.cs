@@ -107,7 +107,9 @@ public sealed class SettingsAdvancedViewModel : INotifyPropertyChanged
             var store = LibraryStoreFactory.Create(settings);
             AppServices.InitializeLibraryStore(store);
             OnPropertyChanged(nameof(LibraryRootPath));
-            Status = store is EmptyLibraryStore ? "Library store: Mock (no DB)" : $"Library store reloaded: {store.RootPath}";
+            Status = store is EmptyLibraryStore
+                ? "Library store: (not found) Set Libraries -> DB path or PLAYNITE_DB_PATH / PLAYNITE_USERDATA_PATH."
+                : $"Library store reloaded: {store.RootPath}";
         }
         catch (Exception e)
         {

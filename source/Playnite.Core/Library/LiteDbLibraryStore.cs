@@ -12,6 +12,14 @@ public sealed class LiteDbLibraryStore : ILibraryStore, IGameStatsStore
 {
     private readonly string rootPath;
 
+    private sealed class FilterPresetsStoreSettings
+    {
+        public int Id { get; set; } = 0;
+        public List<Guid> SortingOrder { get; set; } = new List<Guid>();
+    }
+
+    private const string FilterPresetsSettingsCollectionName = "FilterPresetsSettings";
+
     public LiteDbLibraryStore(string rootPath)
     {
         this.rootPath = rootPath;
@@ -29,6 +37,40 @@ public sealed class LiteDbLibraryStore : ILibraryStore, IGameStatsStore
         return File.Exists(Path.Combine(rootPath, "games.db"));
     }
 
+    public static bool TryInitialize(string rootPath)
+    {
+        if (string.IsNullOrWhiteSpace(rootPath))
+        {
+            return false;
+        }
+
+        try
+        {
+            var gamesDbPath = Path.Combine(rootPath, "games.db");
+
+            // Create an empty database by opening it once
+            var mapper = new BsonMapper();
+            MapLiteDbEntities(mapper);
+
+            using (var db = new LiteDatabase($"Filename={gamesDbPath};Mode=Exclusive;Journal=false", mapper))
+            {
+                // Ensure the games collection exists
+                var games = db.GetCollection<Game>();
+
+                // Force the database to be written to disk
+                // by performing a dummy operation
+                _ = games.Count();
+            }
+
+            // Verify the file was created
+            return File.Exists(gamesDbPath);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public IReadOnlyList<Game> LoadGames()
     {
         var gamesDbPath = Path.Combine(rootPath, "games.db");
@@ -42,6 +84,78 @@ public sealed class LiteDbLibraryStore : ILibraryStore, IGameStatsStore
 
         using var db = new LiteDatabase($"Filename={gamesDbPath};Mode=ReadOnly", mapper);
         return db.GetCollection<Game>().FindAll().ToList();
+    }
+
+    public bool TryUpsertGames(IReadOnlyList<Game> games)
+    {
+        games ??= Array.Empty<Game>();
+
+        var gamesDbPath = Path.Combine(rootPath, "games.db");
+        if (!File.Exists(gamesDbPath))
+        {
+            // Try to initialize the database if it doesn't exist
+            if (!TryInitialize(rootPath))
+            {
+                return false;
+            }
+        }
+
+        try
+        {
+            var mapper = new BsonMapper();
+            MapLiteDbEntities(mapper);
+
+            using var db = new LiteDatabase($"Filename={gamesDbPath};Mode=Exclusive;Journal=false", mapper);
+            var col = db.GetCollection<Game>();
+
+            foreach (var incoming in games.Where(g => g != null))
+            {
+                if (incoming.PluginId == Guid.Empty || string.IsNullOrWhiteSpace(incoming.GameId))
+                {
+                    continue;
+                }
+
+                var existing = col.FindOne(Query.And(
+                    Query.EQ(nameof(Game.PluginId), incoming.PluginId),
+                    Query.EQ(nameof(Game.GameId), incoming.GameId)));
+
+                if (existing == null)
+                {
+                    if (incoming.Id == Guid.Empty)
+                    {
+                        incoming.Id = Guid.NewGuid();
+                    }
+
+                    if (incoming.Added == null)
+                    {
+                        incoming.Added = DateTime.Now;
+                    }
+
+                    col.Upsert(incoming);
+                    continue;
+                }
+
+                existing.Name = string.IsNullOrWhiteSpace(incoming.Name) ? existing.Name : incoming.Name;
+                existing.InstallDirectory = string.IsNullOrWhiteSpace(incoming.InstallDirectory) ? existing.InstallDirectory : incoming.InstallDirectory;
+                existing.IsInstalled = incoming.IsInstalled;
+                existing.PluginId = incoming.PluginId;
+                existing.GameId = incoming.GameId;
+
+                if ((existing.GameActions == null || existing.GameActions.Count == 0) && incoming.GameActions != null)
+                {
+                    existing.GameActions = incoming.GameActions;
+                }
+
+                existing.Modified = DateTime.Now;
+                col.Upsert(existing);
+            }
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public IReadOnlyList<LibraryIdName> LoadPlatforms()
@@ -67,6 +181,104 @@ public sealed class LiteDbLibraryStore : ILibraryStore, IGameStatsStore
 
         using var db = new LiteDatabase($"Filename={dbPath};Mode=ReadOnly", mapper);
         return db.GetCollection<Emulator>().FindAll().ToList();
+    }
+
+    public IReadOnlyList<FilterPreset> LoadFilterPresets()
+    {
+        var dbPath = Path.Combine(rootPath, "filterpresets.db");
+        if (!File.Exists(dbPath))
+        {
+            return Array.Empty<FilterPreset>();
+        }
+
+        var mapper = new BsonMapper();
+        mapper.Entity<FilterPreset>().Id(a => a.Id, false);
+        mapper.Entity<FilterPresetsStoreSettings>().Id(a => a.Id, false);
+
+        using var db = new LiteDatabase($"Filename={dbPath};Mode=ReadOnly", mapper);
+        var presets = db.GetCollection<FilterPreset>().FindAll().ToList();
+        if (presets.Count == 0)
+        {
+            return presets;
+        }
+
+        var settingsCol = db.GetCollection<FilterPresetsStoreSettings>(FilterPresetsSettingsCollectionName);
+        var settings = settingsCol.FindAll().FirstOrDefault();
+        if (settings?.SortingOrder == null || settings.SortingOrder.Count == 0)
+        {
+            return presets.OrderBy(a => a?.Name ?? string.Empty, StringComparer.OrdinalIgnoreCase).ToList();
+        }
+
+        var presetById = presets
+            .Where(a => a != null && a.Id != Guid.Empty)
+            .GroupBy(a => a.Id)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        var ordered = new List<FilterPreset>();
+        foreach (var id in settings.SortingOrder)
+        {
+            if (presetById.TryGetValue(id, out var preset))
+            {
+                ordered.Add(preset);
+            }
+        }
+
+        var remaining = presets
+            .Where(p => p != null && !ordered.Any(o => o.Id == p.Id))
+            .OrderBy(p => p?.Name ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+        ordered.AddRange(remaining);
+
+        return ordered;
+    }
+
+    public bool TrySaveFilterPresets(IReadOnlyList<FilterPreset> presets)
+    {
+        presets ??= Array.Empty<FilterPreset>();
+
+        var dbPath = Path.Combine(rootPath, "filterpresets.db");
+        try
+        {
+            var mapper = new BsonMapper();
+            mapper.Entity<FilterPreset>().Id(a => a.Id, false);
+            mapper.Entity<FilterPresetsStoreSettings>().Id(a => a.Id, false);
+
+            using var db = new LiteDatabase($"Filename={dbPath};Mode=Exclusive;Journal=false", mapper);
+            var col = db.GetCollection<FilterPreset>();
+            var settingsCol = db.GetCollection<FilterPresetsStoreSettings>(FilterPresetsSettingsCollectionName);
+
+            var ids = new List<Guid>();
+            foreach (var preset in presets.Where(p => p != null))
+            {
+                if (preset.Id == Guid.Empty)
+                {
+                    preset.Id = Guid.NewGuid();
+                }
+
+                ids.Add(preset.Id);
+                col.Upsert(preset);
+            }
+
+            var existing = col.FindAll().Select(a => a.Id).ToList();
+            foreach (var existingId in existing)
+            {
+                if (!ids.Contains(existingId))
+                {
+                    col.Delete(existingId);
+                }
+            }
+
+            settingsCol.Upsert(new FilterPresetsStoreSettings
+            {
+                Id = 0,
+                SortingOrder = ids
+            });
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public bool TryUpdateGameStats(Game game)

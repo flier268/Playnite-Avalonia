@@ -13,13 +13,20 @@ public sealed class AddonsInstalledThemesViewModel : INotifyPropertyChanged
     private readonly AddonsManager manager = AddonsManager.CreateDefault();
     private AddonManifest? selectedTheme;
     private string status = string.Empty;
+    private readonly RelayCommand uninstallCommand;
+    private readonly RelayCommand reinstallSelectedFromFileCommand;
 
     public AddonsInstalledThemesViewModel()
     {
         Themes = new ObservableCollection<AddonManifest>();
         RefreshCommand = new RelayCommand(Refresh);
         InstallFromFileCommand = new RelayCommand(() => TaskUtilities.FireAndForget(InstallFromFileAsync()));
-        UninstallCommand = new RelayCommand(UninstallSelected);
+
+        reinstallSelectedFromFileCommand = new RelayCommand(() => TaskUtilities.FireAndForget(ReinstallSelectedFromFileAsync()), () => SelectedTheme != null);
+        ReinstallSelectedFromFileCommand = reinstallSelectedFromFileCommand;
+
+        uninstallCommand = new RelayCommand(UninstallSelected, () => CanUninstall);
+        UninstallCommand = uninstallCommand;
 
         AppServices.AddonsChanged += (_, _) => Refresh();
         Refresh();
@@ -42,6 +49,9 @@ public sealed class AddonsInstalledThemesViewModel : INotifyPropertyChanged
 
             selectedTheme = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(CanUninstall));
+            reinstallSelectedFromFileCommand.RaiseCanExecuteChanged();
+            uninstallCommand.RaiseCanExecuteChanged();
         }
     }
 
@@ -62,7 +72,10 @@ public sealed class AddonsInstalledThemesViewModel : INotifyPropertyChanged
 
     public ICommand RefreshCommand { get; }
     public ICommand InstallFromFileCommand { get; }
+    public ICommand ReinstallSelectedFromFileCommand { get; }
     public ICommand UninstallCommand { get; }
+
+    public bool CanUninstall => SelectedTheme?.IsUserInstall == true;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -88,6 +101,44 @@ public sealed class AddonsInstalledThemesViewModel : INotifyPropertyChanged
         var path = await FilePickerService.PickPackageFileAsync();
         if (string.IsNullOrWhiteSpace(path))
         {
+            return;
+        }
+
+        var result = manager.InstallFromPackage(path);
+        Status = result.Success ? $"Installed: {result.Manifest?.Name ?? result.Manifest?.Id}" : result.ErrorMessage;
+        AppServices.NotifyAddonsChanged();
+        Refresh();
+    }
+
+    private async System.Threading.Tasks.Task ReinstallSelectedFromFileAsync()
+    {
+        if (SelectedTheme == null)
+        {
+            return;
+        }
+
+        var selectedId = SelectedTheme.Id ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(selectedId))
+        {
+            return;
+        }
+
+        var path = await FilePickerService.PickPackageFileAsync();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        var packageManifest = manager.TryReadPackageManifest(path);
+        if (packageManifest == null || string.IsNullOrWhiteSpace(packageManifest.Id))
+        {
+            Status = "Invalid package (missing manifest).";
+            return;
+        }
+
+        if (!string.Equals(packageManifest.Id, selectedId, System.StringComparison.OrdinalIgnoreCase))
+        {
+            Status = $"Selected theme id '{selectedId}' doesn't match package id '{packageManifest.Id}'.";
             return;
         }
 

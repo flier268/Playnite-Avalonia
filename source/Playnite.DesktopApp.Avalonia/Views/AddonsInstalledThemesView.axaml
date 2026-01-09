@@ -18,6 +18,7 @@
       <StackPanel Spacing="8">
         <StackPanel Orientation="Horizontal" Spacing="10">
           <Button Content="Install from file" Command="{Binding InstallFromFileCommand}" />
+          <Button Content="Reinstall selected from file" Command="{Binding ReinstallSelectedFromFileCommand}" />
           <Button Content="Refresh" Command="{Binding RefreshCommand}" />
           <Button Content="Uninstall selected" Command="{Binding UninstallCommand}" />
         </StackPanel>

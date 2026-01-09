@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -9,6 +11,7 @@ using global::Playnite.SDK;
 using global::Playnite.SDK.Models;
 using System;
 using Playnite.Metadata;
+using Playnite.LibraryImport;
 using System.Collections.Generic;
 
 namespace Playnite.DesktopApp.Avalonia.ViewModels;
@@ -20,6 +23,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private readonly IDesktopNavigationService? navigation;
     private Game? selectedGame;
     private LibraryListEntry? selectedEntry;
+    private bool isApplyingPreset;
+    private bool ignorePresetApply;
     private string filterText = string.Empty;
     private bool showInstalledOnly;
     private bool showFavoritesOnly;
@@ -33,6 +38,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private string lastAction = "None";
     private Dictionary<Guid, string> platformNameById = new();
     private Dictionary<Guid, string> genreNameById = new();
+    private LibraryPresetOption? selectedPreset;
     private readonly ObservableCollection<MetadataProviderListItem> metadataProviders = new ObservableCollection<MetadataProviderListItem>();
     private MetadataProviderListItem? selectedMetadataProvider;
 
@@ -50,6 +56,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         this.navigation = navigation;
         allGames = new ObservableCollection<Game>();
         Games = new ObservableCollection<LibraryListEntry>();
+        PresetOptions = new ObservableCollection<LibraryPresetOption>();
+        QuickPresetOptions = new ObservableCollection<LibraryPresetOption>();
 
         PlatformOptions = new ObservableCollection<LibraryFilterOption>(BuildOptions("All platforms", dataSource.LoadPlatforms()));
         GenreOptions = new ObservableCollection<LibraryFilterOption>(BuildOptions("All genres", dataSource.LoadGenres()));
@@ -59,6 +67,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         OpenDetailsCommand = new RelayCommand<Game>(OpenDetails);
         PlayCommand = new RelayCommand<Game>(PlayGame);
         InstallCommand = new RelayCommand<Game>(InstallGame);
+        OpenInstallDirectoryCommand = new RelayCommand<Game>(OpenInstallDirectory);
         ToggleFavoriteCommand = new RelayCommand<Game>(ToggleFavorite);
         ToggleHiddenCommand = new RelayCommand<Game>(ToggleHidden);
         RescanInstallSizeCommand = new RelayCommand<Game>(game => TaskUtilities.FireAndForget(RescanInstallSizeAsync(game)));
@@ -67,11 +76,15 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         DownloadMetadataCommand = new RelayCommand<Game>(game => TaskUtilities.FireAndForget(DownloadMetadataAsync(game, overwriteExisting: true)));
         DownloadMissingMetadataCommand = new RelayCommand<Game>(game => TaskUtilities.FireAndForget(DownloadMetadataAsync(game, overwriteExisting: false)));
         DownloadMissingMetadataForFilteredCommand = new RelayCommand(() => TaskUtilities.FireAndForget(DownloadMetadataForFilteredAsync()));
-        ReloadCommand = new RelayCommand(() => Reload());
+        ReloadCommand = new RelayCommand(() => ReloadFromFactory());
+        ManagePresetsCommand = new RelayCommand(() => TaskUtilities.FireAndForget(OpenPresetManagerAsync()));
+        ImportSteamCommand = new RelayCommand(() => TaskUtilities.FireAndForget(ImportSteamAsync()));
+        ImportEpicCommand = new RelayCommand(() => TaskUtilities.FireAndForget(ImportEpicAsync()));
+        UpdateLibraryCommand = new RelayCommand(() => TaskUtilities.FireAndForget(UpdateLibraryAsync()));
 
         AppServices.LibraryStoreChanged += (_, _) =>
         {
-            Reload();
+            ReloadFromFactory();
         };
 
         AppServices.SettingsChanged += (_, _) =>
@@ -90,9 +103,40 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     public ObservableCollection<LibraryListEntry> Games { get; }
 
+    public ObservableCollection<LibraryPresetOption> PresetOptions { get; }
+    public ObservableCollection<LibraryPresetOption> QuickPresetOptions { get; }
+
+    public LibraryPresetOption? SelectedPreset
+    {
+        get => selectedPreset;
+        set
+        {
+            if (ReferenceEquals(selectedPreset, value))
+            {
+                return;
+            }
+
+            selectedPreset = value;
+            OnPropertyChanged();
+
+            if (ignorePresetApply)
+            {
+                return;
+            }
+
+            if (selectedPreset?.Preset != null)
+            {
+                ApplyPreset(selectedPreset.Preset);
+            }
+
+            PersistSelectedPreset();
+        }
+    }
+
     public ICommand OpenDetailsCommand { get; }
     public ICommand PlayCommand { get; }
     public ICommand InstallCommand { get; }
+    public ICommand OpenInstallDirectoryCommand { get; }
     public ICommand ToggleFavoriteCommand { get; }
     public ICommand ToggleHiddenCommand { get; }
     public ICommand RescanInstallSizeCommand { get; }
@@ -102,11 +146,15 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     public ICommand DownloadMissingMetadataCommand { get; }
     public ICommand DownloadMissingMetadataForFilteredCommand { get; }
     public ICommand ReloadCommand { get; }
+    public ICommand ManagePresetsCommand { get; }
+    public ICommand ImportSteamCommand { get; }
+    public ICommand ImportEpicCommand { get; }
+    public ICommand UpdateLibraryCommand { get; }
 
     public ObservableCollection<LibraryFilterOption> PlatformOptions { get; }
     public ObservableCollection<LibraryFilterOption> GenreOptions { get; }
 
-    public bool CanAutoScanInstallSizes => AppServices.LoadSettings().ScanLibInstallSizeOnLibUpdate;
+    public bool CanAutoScanInstallSizes => AppServices.SettingsStore != null && AppServices.LoadSettings().ScanLibInstallSizeOnLibUpdate;
 
     public ObservableCollection<MetadataProviderListItem> MetadataProviders => metadataProviders;
 
@@ -137,6 +185,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
             selectedPlatform = value;
             OnPropertyChanged();
+            EnsureCustomPresetSelected();
             ApplyFilter();
         }
     }
@@ -153,6 +202,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
             selectedGenre = value;
             OnPropertyChanged();
+            EnsureCustomPresetSelected();
             ApplyFilter();
         }
     }
@@ -169,6 +219,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
             filterText = value;
             OnPropertyChanged();
+            EnsureCustomPresetSelected();
             ApplyFilter();
         }
     }
@@ -185,6 +236,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
             showInstalledOnly = value;
             OnPropertyChanged();
+            EnsureCustomPresetSelected();
             ApplyFilter();
         }
     }
@@ -201,6 +253,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
             showFavoritesOnly = value;
             OnPropertyChanged();
+            EnsureCustomPresetSelected();
             ApplyFilter();
         }
     }
@@ -217,6 +270,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
             showHidden = value;
             OnPropertyChanged();
+            EnsureCustomPresetSelected();
             ApplyFilter();
         }
     }
@@ -233,6 +287,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
             requireCover = value;
             OnPropertyChanged();
+            EnsureCustomPresetSelected();
             ApplyFilter();
         }
     }
@@ -249,6 +304,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
             sortMode = value;
             OnPropertyChanged();
+            EnsureCustomPresetSelected();
             ApplyFilter();
         }
     }
@@ -292,6 +348,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
                 OnPropertyChanged();
             }
 
+            EnsureCustomPresetSelected();
             ApplyFilter();
         }
     }
@@ -373,12 +430,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     public void Reload()
     {
-        dataSource = LibraryDataSourceFactory.Create();
         platformNameById = dataSource.LoadPlatforms().ToDictionary(a => a.Id, a => a.Name);
         genreNameById = dataSource.LoadGenres().ToDictionary(a => a.Id, a => a.Name);
 
         var selectedPlatformId = SelectedPlatform?.Id;
         var selectedGenreId = SelectedGenre?.Id;
+        var persistedPresetId = AppServices.SettingsStore != null ? AppServices.LoadSettings().SelectedLibraryFilterPresetId : Guid.Empty;
 
         PlatformOptions.Clear();
         foreach (var option in BuildOptions("All platforms", dataSource.LoadPlatforms()))
@@ -394,6 +451,28 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
         SelectedPlatform = PlatformOptions.FirstOrDefault(a => a.Id == selectedPlatformId) ?? PlatformOptions.FirstOrDefault();
         SelectedGenre = GenreOptions.FirstOrDefault(a => a.Id == selectedGenreId) ?? GenreOptions.FirstOrDefault();
+
+        var selectedPresetId = SelectedPreset?.Id;
+        PresetOptions.Clear();
+        PresetOptions.Add(LibraryPresetOption.Custom());
+        foreach (var preset in dataSource.LoadFilterPresets().Where(a => a != null))
+        {
+            PresetOptions.Add(new LibraryPresetOption(preset.Id, preset.Name ?? string.Empty, preset));
+        }
+
+        QuickPresetOptions.Clear();
+        QuickPresetOptions.Add(PresetOptions[0]);
+        foreach (var preset in PresetOptions.Where(a => a.Preset?.ShowInFullscreeQuickSelection == true))
+        {
+            QuickPresetOptions.Add(preset);
+        }
+
+        ignorePresetApply = true;
+        SelectedPreset =
+            PresetOptions.FirstOrDefault(a => a.Id == selectedPresetId) ??
+            PresetOptions.FirstOrDefault(a => a.Id == persistedPresetId) ??
+            PresetOptions.FirstOrDefault();
+        ignorePresetApply = false;
 
         allGames = dataSource.LoadGames();
 
@@ -411,6 +490,225 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         {
             TaskUtilities.FireAndForget(RescanAllInstallSizesAsync(onlyMissingOrStale: true));
         }
+    }
+
+    private void ReloadFromFactory()
+    {
+        dataSource = LibraryDataSourceFactory.Create();
+        Reload();
+    }
+
+    private void EnsureCustomPresetSelected()
+    {
+        if (isApplyingPreset)
+        {
+            return;
+        }
+
+        if (SelectedPreset?.Preset == null)
+        {
+            return;
+        }
+
+        var custom = PresetOptions.FirstOrDefault();
+        if (custom == null || custom.Preset != null)
+        {
+            return;
+        }
+
+        ignorePresetApply = true;
+        SelectedPreset = custom;
+        ignorePresetApply = false;
+    }
+
+    private void ApplyPreset(FilterPreset preset)
+    {
+        if (preset == null)
+        {
+            return;
+        }
+
+        try
+        {
+            isApplyingPreset = true;
+
+            var settings = preset.Settings;
+            FilterText = settings?.Name ?? string.Empty;
+            ShowInstalledOnly = settings?.IsInstalled == true;
+            ShowFavoritesOnly = settings?.Favorite == true;
+            ShowHidden = settings?.Hidden == true;
+
+            var platformId = settings?.Platform?.Ids?.FirstOrDefault();
+            SelectedPlatform = platformId.HasValue
+                ? (PlatformOptions.FirstOrDefault(a => a.Id == platformId.Value) ?? PlatformOptions.FirstOrDefault())
+                : PlatformOptions.FirstOrDefault();
+
+            var genreId = settings?.Genre?.Ids?.FirstOrDefault();
+            SelectedGenre = genreId.HasValue
+                ? (GenreOptions.FirstOrDefault(a => a.Id == genreId.Value) ?? GenreOptions.FirstOrDefault())
+                : GenreOptions.FirstOrDefault();
+
+            if (preset.SortingOrder.HasValue)
+            {
+                SortMode = preset.SortingOrder.Value switch
+                {
+                    SortOrder.LastActivity => LibrarySortMode.LastActivity,
+                    SortOrder.Added => LibrarySortMode.Added,
+                    SortOrder.Playtime => LibrarySortMode.Playtime,
+                    SortOrder.PlayCount => LibrarySortMode.PlayCount,
+                    SortOrder.ReleaseDate => LibrarySortMode.ReleaseDate,
+                    _ => LibrarySortMode.Name
+                };
+            }
+
+            if (preset.GroupingOrder.HasValue)
+            {
+                GroupMode = preset.GroupingOrder.Value switch
+                {
+                    GroupableField.Platform => LibraryGroupMode.Platform,
+                    GroupableField.Genre => LibraryGroupMode.Genre,
+                    _ => LibraryGroupMode.None
+                };
+            }
+
+            LastAction = $"Preset applied: {preset.Name}";
+        }
+        finally
+        {
+            isApplyingPreset = false;
+        }
+
+        ApplyFilter();
+    }
+
+    private void PersistSelectedPreset()
+    {
+        if (ignorePresetApply)
+        {
+            return;
+        }
+
+        if (AppServices.SettingsStore == null)
+        {
+            return;
+        }
+
+        var presetId = SelectedPreset?.Preset?.Id ?? Guid.Empty;
+        try
+        {
+            var settings = AppServices.LoadSettings();
+            if (settings.SelectedLibraryFilterPresetId == presetId)
+            {
+                return;
+            }
+
+            settings.SelectedLibraryFilterPresetId = presetId;
+            AppServices.SaveSettings(settings);
+        }
+        catch
+        {
+        }
+    }
+
+    private async System.Threading.Tasks.Task OpenPresetManagerAsync()
+    {
+        if (AppServices.MainWindow == null)
+        {
+            LastAction = "Manage presets (no main window)";
+            return;
+        }
+
+        var store = AppServices.LibraryStore;
+        if (store == null || store is EmptyLibraryStore)
+        {
+            LastAction = "Manage presets (no DB)";
+            return;
+        }
+
+        var window = new Views.Dialogs.FilterPresetManagerWindow();
+        window.DataContext = new ViewModels.Dialogs.FilterPresetManagerViewModel(
+            store,
+            (title, message) => Views.Dialogs.ConfirmWindow.ShowAsync(window, title, message));
+
+        bool ok = false;
+        try
+        {
+            ok = await window.ShowDialog<bool>(AppServices.MainWindow);
+        }
+        catch
+        {
+        }
+
+        if (!ok)
+        {
+            return;
+        }
+
+        try
+        {
+            ReloadFromFactory();
+            AppServices.InitializeLibraryStore(store);
+        }
+        catch
+        {
+        }
+    }
+
+    private async System.Threading.Tasks.Task ImportSteamAsync()
+    {
+        var store = AppServices.LibraryStore;
+        if (store == null || store is EmptyLibraryStore)
+        {
+            LastAction = "Import Steam (no DB)";
+            return;
+        }
+
+        LastAction = "Importing from Steam...";
+        var result = await System.Threading.Tasks.Task.Run(() => new LibraryImportService(store).ImportSteam());
+        LastAction = result.Success ? result.Message : $"Steam import failed: {result.Message}";
+        ReloadFromFactory();
+    }
+
+    private async System.Threading.Tasks.Task ImportEpicAsync()
+    {
+        var store = AppServices.LibraryStore;
+        if (store == null || store is EmptyLibraryStore)
+        {
+            LastAction = "Import Epic (no DB)";
+            return;
+        }
+
+        LastAction = "Importing from Epic...";
+        var result = await System.Threading.Tasks.Task.Run(() => new LibraryImportService(store).ImportEpic());
+        LastAction = result.Success ? result.Message : $"Epic import failed: {result.Message}";
+        ReloadFromFactory();
+    }
+
+    private async System.Threading.Tasks.Task UpdateLibraryAsync()
+    {
+        var store = AppServices.LibraryStore;
+        if (store == null || store is EmptyLibraryStore)
+        {
+            LastAction = "Update library (no DB)";
+            return;
+        }
+
+        LastAction = "Updating library (Steam + Epic)...";
+        var result = await System.Threading.Tasks.Task.Run(() =>
+        {
+            var svc = new LibraryImportService(store);
+            var steam = svc.ImportSteam();
+            var epic = svc.ImportEpic();
+            var ok = steam.Success && epic.Success;
+            var count = steam.ImportedCount + epic.ImportedCount;
+            var msg = ok
+                ? $"Update complete: {count} (Steam {steam.ImportedCount}, Epic {epic.ImportedCount})"
+                : $"Update finished with errors: Steam=({steam.Success}) Epic=({epic.Success})";
+            return (ok, msg);
+        });
+
+        LastAction = result.msg;
+        ReloadFromFactory();
     }
 
     private void RefreshMetadataProviders()
@@ -691,6 +989,48 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         ApplyFilter();
     }
 
+    private void OpenInstallDirectory(Game? game)
+    {
+        if (game != null)
+        {
+            SelectedGame = game;
+        }
+
+        if (SelectedGame == null)
+        {
+            LastAction = "Open install directory (no selection)";
+            return;
+        }
+
+        var installDir = SelectedGame.InstallDirectory ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(installDir))
+        {
+            LastAction = $"Open install directory (missing path): {SelectedGame.Name}";
+            return;
+        }
+
+        if (!Directory.Exists(installDir))
+        {
+            LastAction = $"Open install directory (not found): {installDir}";
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = installDir,
+                UseShellExecute = true
+            });
+
+            LastAction = $"Opened install directory: {SelectedGame.Name}";
+        }
+        catch (Exception e)
+        {
+            LastAction = $"Failed to open install directory: {e.Message}";
+        }
+    }
+
     private void ToggleFavorite(Game? game)
     {
         if (game != null)
@@ -900,6 +1240,27 @@ public sealed class LibraryFilterOption
 
     public Guid? Id { get; }
     public string Name { get; }
+
+    public override string ToString() => Name;
+}
+
+public sealed class LibraryPresetOption
+{
+    public LibraryPresetOption(Guid? id, string name, FilterPreset? preset)
+    {
+        Id = id;
+        Name = name ?? string.Empty;
+        Preset = preset;
+    }
+
+    public Guid? Id { get; }
+    public string Name { get; }
+    public FilterPreset? Preset { get; }
+
+    public static LibraryPresetOption Custom()
+    {
+        return new LibraryPresetOption(null, "(Custom)", null);
+    }
 
     public override string ToString() => Name;
 }

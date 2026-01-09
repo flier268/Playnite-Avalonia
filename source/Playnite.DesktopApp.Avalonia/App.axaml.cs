@@ -9,7 +9,9 @@ using Playnite.Addons;
 using Playnite.Addons.OutOfProc;
 using Playnite.DesktopApp.Avalonia.Services;
 using Playnite.Library;
+using Playnite.LibraryImport;
 using Playnite.Metadata;
+using Avalonia.Threading;
 
 namespace Playnite.DesktopApp.Avalonia
 {
@@ -38,8 +40,28 @@ namespace Playnite.DesktopApp.Avalonia
                 CultureService.Apply(settings.Language);
 
                 var libraryStore = LibraryStoreFactory.Create(settings);
+                if (libraryStore is not EmptyLibraryStore
+                    && string.IsNullOrWhiteSpace(settings.LibraryDbPath)
+                    && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PLAYNITE_DB_PATH")))
+                {
+                    settings.LibraryDbPath = libraryStore.RootPath;
+                    settingsStore.Save(settings);
+                }
                 AppServices.InitializeLibraryStore(libraryStore);
                 MetadataProviderRegistry.Default.Register(new LocalFilesMetadataProvider());
+
+                if (libraryStore is not EmptyLibraryStore && settings.UpdateLibStartup)
+                {
+                    Task.Run(() =>
+                    {
+                        var svc = new LibraryImportService(libraryStore);
+                        _ = svc.ImportSteam();
+                        _ = svc.ImportEpic();
+                    }).ContinueWith(_ =>
+                    {
+                        Dispatcher.UIThread.Post(() => AppServices.InitializeLibraryStore(libraryStore));
+                    });
+                }
 
                 try
                 {

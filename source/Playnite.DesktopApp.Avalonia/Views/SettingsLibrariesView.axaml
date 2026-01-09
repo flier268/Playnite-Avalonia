@@ -29,5 +29,41 @@
                    TextWrapping="Wrap" />
       </StackPanel>
     </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}"
+            BorderBrush="{DynamicResource ShellItemBorderBrush}"
+            BorderThickness="1"
+            Padding="12"
+            CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Steam installation paths" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <TextBlock Text="Optional: Specify custom Steam installation directories. Supports multiple paths separated by semicolon (;). Leave empty for auto-detection."
+                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                   TextWrapping="Wrap" />
+        <TextBox Text="{Binding SteamPath}" Watermark="e.g. C:\Steam;D:\Games\Steam or ~/.local/share/Steam;/mnt/games/Steam" />
+        <TextBlock Text="Examples: C:\Program Files (x86)\Steam;D:\Steam | ~/.local/share/Steam;/mnt/games/Steam"
+                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                   FontSize="11"
+                   TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ShellCardBrush}"
+            BorderBrush="{DynamicResource ShellItemBorderBrush}"
+            BorderThickness="1"
+            Padding="12"
+            CornerRadius="6">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Epic Games manifests paths" Foreground="{DynamicResource ShellTextBrush}" FontWeight="Bold" />
+        <TextBlock Text="Optional: Specify custom Epic Games manifests directories. Supports multiple paths separated by semicolon (;). Leave empty for auto-detection."
+                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                   TextWrapping="Wrap" />
+        <TextBox Text="{Binding EpicManifestsPath}" Watermark="e.g. C:\ProgramData\Epic\...\Manifests;D:\Epic\Manifests" />
+        <TextBlock Text="Examples: C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests | ~/.config/heroic/legendaryConfig/metadata;~/.config/legendary/metadata"
+                   Foreground="{DynamicResource ShellMutedTextBrush}"
+                   FontSize="11"
+                   TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
   </StackPanel>
 </UserControl>
